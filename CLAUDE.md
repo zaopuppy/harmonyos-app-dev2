@@ -10,7 +10,7 @@ HarmonyOS 应用开发技能工具箱，为 Agent 系统提供 ArkTS 语法、Ar
 | `harmony-arkui` | ArkUI 组件语法 |
 | `harmony-template` | 应用/模块模板 |
 | `harmony-ut` | 单元测试 |
-| `harmony-devtools` | 开发者工具 |
+| `harmony-cli` | 命令行工具 |
 
 ## 使用方式
 
