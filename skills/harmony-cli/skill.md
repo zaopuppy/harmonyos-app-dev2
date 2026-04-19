@@ -310,11 +310,11 @@ hdc shell bm clean -c -n <bundle>   # 清理缓存
 
 ## 参考文档
 
-更多工具详情请参考：
-- `docs/reference/hdc.md`
-- `docs/reference/aa-tool.md`
-- `docs/reference/bm-tool.md`
-- `docs/reference/hilog.md`
-- `docs/reference/hidumper.md`
-- `docs/reference/hitrace.md`
-- `docs/reference/hiperf.md`
+更多工具详情请参考 `reference/` 目录：
+- `reference/hdc.md`
+- `reference/aa-tool.md`
+- `reference/bm-tool.md`
+- `reference/hilog.md`
+- `reference/hidumper.md`
+- `reference/hitrace.md`
+- `reference/hiperf.md`
