@@ -4,34 +4,38 @@
 
 param 是 HarmonyOS 的系统参数管理工具，用于查看、设置、等待系统参数。
 
-**前置条件**：需要先获取 hdc 工具并执行 `hdc shell param`。
+## 帮助信息
+
+```bash
+param --help
+```
 
 ## 命令列表
 
-| 命令 | 描述 |
+| 命令 | 说明 |
 |------|------|
-| `param ls` | 列出系统参数 |
-| `param get` | 获取参数值 |
-| `param set` | 设置参数值 |
-| `param wait` | 等待参数变化 |
-| `param dump` | 导出所有参数 |
-| `param shell` | Shell 模式 |
-| `param save` | 保存持久化参数 |
+| `param ls [-r] [name]` | 显示系统参数 |
+| `param get [name]` | 获取系统参数 |
+| `param set <name> <value>` | 设置系统参数 |
+| `param wait <name> [value] [timeout]` | 等待系统参数 |
+| `param dump [verbose]` | 导出系统参数 |
+| `param shell [-p] [name] [-u] [username] [-g] [groupname]` | Shell 模式 |
+| `param save` | 保存所有持久化参数 |
 
-## 查看参数 (ls)
+## ls 命令 - 列出参数
 
 ```bash
 # 列出所有参数
 param ls
 
-# 递归列出（显示层级）
+# 递归列出
 param ls -r
 
 # 列出指定参数
 param ls <name>
 ```
 
-## 获取参数 (get)
+## get 命令 - 获取参数
 
 ```bash
 # 获取单个参数值
@@ -42,7 +46,7 @@ param getpersist sys.hilogutable
 param get lready.bootevent.sys.bootevent
 ```
 
-## 设置参数 (set)
+## set 命令 - 设置参数
 
 ```bash
 # 设置参数值
@@ -55,23 +59,23 @@ param set persist.hilogd.enabled true
 
 **注意**：部分参数需要 root 权限或重启后才生效。
 
-## 等待参数 (wait)
+## wait 命令 - 等待参数
 
 ```bash
 # 等待参数变化
-param wait <name> [value] [timeout]
+param wait <name>
 
 # 等待参数变为指定值
 param wait <name> <value>
 
 # 带超时等待（秒）
-param wait <name> <value> 30
+param wait <name> <value> <timeout>
 
 # 示例
-param wait sys.bootevent 1 60
+param wait sys.bootevent 1 300
 ```
 
-## 导出参数 (dump)
+## dump 命令 - 导出参数
 
 ```bash
 # 导出所有参数
@@ -81,7 +85,7 @@ param dump
 param dump verbose
 ```
 
-## Shell 模式 (shell)
+## shell 命令 - Shell 模式
 
 ```bash
 # 进入交互模式
@@ -97,7 +101,7 @@ param shell -u <username>
 param shell -g <groupname>
 ```
 
-## 保存参数 (save)
+## save 命令 - 保存参数
 
 ```bash
 # 保存所有持久化参数到工作区
@@ -117,7 +121,7 @@ param ls | grep -i boot
 param ls | grep -i debug
 
 # 等待设备启动完成
-param wait sys.bootevent 1 300
+param wait sys.bootevent 1 600
 ```
 
 ## 常见使用场景

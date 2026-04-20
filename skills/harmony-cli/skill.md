@@ -4,7 +4,7 @@ description: |
   HarmonyOS 命令行工具，用于设备调试、截图、安装应用、查看日志、性能分析、获取系统信息等。
   当用户说"截图"、"截屏"、"安装应用"、"卸载应用"、"查看日志"、"查看内存"、"查看CPU"、
   "性能分析"、"抓trace"、"查看设备信息"、"系统参数"等场景时触发。
-  支持 hdc, hilog, hidumper, hitrace, hiperf, aa, bm, param 等工具。
+  支持 hdc, hilog, hidumper, hitrace, hiperf, aa, bm, param, uitest 等工具。
   详细命令参数请查阅 reference/ 目录对应文档。
 ---
 
@@ -20,6 +20,25 @@ where hdc        # Windows
 which hdc        # Linux/Mac
 
 # hdc 通常位于 DevEco Studio/sdk/default/openharmony/toolchains/
+```
+
+---
+
+## Windows Git Bash 注意事项
+
+**问题**：`hdc file recv` 使用相对路径（如 `./file.txt`）时，Git Bash 会把路径转换成 `C:/Program Files/Git/...`
+
+**解决**：始终使用**绝对路径**或先 `cd` 到目标目录
+
+```bash
+# 错误示例（Git Bash 下）
+hdc file recv /data/local/tmp/log.txt ./log.txt
+
+# 正确示例
+hdc file recv /data/local/tmp/log.txt /c/users/yourname/log.txt
+# 或
+cd /c/users/yourname
+hdc file recv /data/local/tmp/log.txt ./log.txt
 ```
 
 ---
@@ -72,6 +91,12 @@ which hdc        # Linux/Mac
 | `param get <name>` | 获取参数值 | 查询指定参数 |
 | `param set <name> <value>` | 设置参数 | 修改系统参数 |
 | `param dump` | 导出参数 | 导出系统参数 |
+| **uitest** | UI 测试 | |
+| `uitest screenCap` | 屏幕截图 | 获取当前屏幕快照 |
+| `uitest dumpLayout` | 布局导出 | 获取界面布局信息 |
+| `uitest uiInput click <x> <y>` | 点击 | 模拟点击操作 |
+| `uitest uiInput swipe` | 滑动 | 模拟滑动操作 |
+| `uitest uiInput text` | 文本输入 | 模拟文本输入 |
 
 ---
 
@@ -81,8 +106,10 @@ which hdc        # Linux/Mac
 
 ```bash
 # === 截图 ===
+# 注意：Windows 下请用绝对路径替换 ./xxx
 hdc shell "screenshot /data/local/tmp/screenshot.png"
-hdc file recv /data/local/tmp/screenshot.png ./screenshot.png
+hdc file recv /data/local/tmp/screenshot.png <本地绝对路径>/screenshot.png
+hdc shell uitest screenCap -p /data/local/tmp/screen.png
 
 # === 应用管理 ===
 hdc install /local/app.hap
@@ -126,6 +153,7 @@ hdc shell param set <name> <value>
 | `reference/aa-tool.md` | aa start/stop/dump/attach 命令 |
 | `reference/bm-tool.md` | bm install/uninstall/dump/clean 命令 |
 | `reference/param.md` | 系统参数查看/设置/等待 |
+| `reference/uitest.md` | UI 测试：截图、布局、点击、滑动、输入 |
 
 ---
 

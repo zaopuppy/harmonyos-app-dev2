@@ -4,166 +4,134 @@
 
 hidumper 是 HarmonyOS 的系统信息导出工具，用于查询内存、CPU、服务、进程等系统信息。
 
-## 查询内存信息
-
-### 查询整机内存
+## 帮助信息
 
 ```bash
-hidumper --mem
+hidumper --help              # 显示帮助
+hidumper --mem --help       # 内存帮助（需要指定 pid）
 ```
 
-输出包括：
+## 内存信息 (--mem)
+
+```bash
+# 整机内存
+hidumper --mem
+
+# 进程内存
+hidumper --mem <pid>
+
+# JS 堆内存
+hidumper --mem-jsheap <pid>              # 导出 JS 堆
+hidumper --mem-jsheap <pid> --gc         # 导出并触发 GC
+hidumper --mem-jsheap <pid> --leakobj    # 导出泄露对象
+hidumper --mem-jsheap <pid> --raw        # 导出原始数据
+
+# 进程 smaps
+hidumper --mem-smaps <pid>
+hidumper --mem-smaps <pid> -v            # 详细模式
+
+# 虚拟机堆内存选项
+hidumper --mem <pid> --show-ashmem       # 显示 ashmem
+hidumper --mem <pid> --show-dmabuf       # 显示 dmabuf
+
+# 排除系统进程
+hidumper --mem --prune
+```
+
+**输出内容：**
 - Total RAM / Free RAM / Used RAM
 - 进程内存使用（按 PID 和 Size 排序）
 - 按 OOM adjustment 分类
 - 按 Category 分类（File-backed, Anonymous, GPU, DMA 等）
 
-### 查询进程内存
+## CPU 信息
 
 ```bash
-hidumper --mem <pid>
+# CPU 使用率
+hidumper --cpuusage             # 查看当前
+hidumper --cpuusage 1           # 每秒刷新
+
+# CPU 频率
+hidumper --cpufreq
 ```
 
-### 查询虚拟机堆内存
-
-```bash
-hidumper --mem <pid> --show-ashmem   # 显示 ashmem 信息
-hidumper --mem <pid> --show-dmabuf   # 显示 dmabuf 信息
-```
-
-### 排除系统进程的内存
-
-```bash
-hidumper --mem --prune
-```
-
-### 查询 JS 堆内存
-
-```bash
-# 导出 JS 堆内存
-hidumper --mem-jsheap <pid>
-
-# 导出并触发 GC
-hidumper --mem-jsheap <pid> --gc
-
-# 导出泄露对象
-hidumper --mem-jsheap <pid> --leakobj
-
-# 导出原始数据
-hidumper --mem-jsheap <pid> --raw
-```
-
-### 查询进程 smaps
-
-```bash
-hidumper --mem-smaps <pid>
-hidumper --mem-smaps <pid> -v  # 详细模式
-```
-
-## 查询 CPU 使用情况
-
-### 查询整机 CPU
-
-```bash
-hidumper --cpuusage        # 查看当前 CPU
-hidumper --cpuusage 1       # 每秒刷新
-```
-
-输出：
+**--cpuusage 输出：**
 - Load average (1min / 5min / 15min)
 - Total CPU 使用率
 - User Space / Kernel Space / iowait / irq / idle
 - 各进程详细使用
 
-### 查询 CPU 频率
+## 系统服务
 
 ```bash
-hidumper --cpufreq
-```
-
-## 查询系统服务
-
-### 查询服务列表
-
-```bash
+# 服务列表
 hidumper --services
-```
 
-### 获取服务详细信息
-
-```bash
+# 服务详情
 hidumper --service <service-name>
 ```
 
-## 查询进程信息
+## 进程信息
 
 ```bash
+# 进程列表
 hidumper --ps
+
+# 应用窗口信息
+hidumper --window <pid>
+
+# 组件树
+hidumper --inspector <pid>
+
+# 路由栈
+hidumper --router <pid>
 ```
 
-## 查询网络信息
+## 网络和存储
 
 ```bash
+# 网络信息
 hidumper --net
-```
 
-## 查询存储信息
-
-```bash
+# 存储信息
 hidumper --storage
 ```
 
-## 查询系统信息
+## 系统信息
 
 ```bash
+# 系统信息
 hidumper --sys
 ```
 
-## 获取故障日志
-
-### 获取异常退出记录
+## 故障日志
 
 ```bash
+# 异常退出记录
 hidumper --crashlogs
-```
 
-### 获取故障详情
-
-```bash
+# 故障详情
 hidumper --faultlogs
 ```
 
-## 获取进程间通信信息
+## 进程间通信
 
 ```bash
+# IPC RPCS 信息
 hidumper --ipcrpcs
 ```
 
-## 导出信息
+## 导出功能
 
 ```bash
-hidumper --all          # 导出所有信息
-hidumper -s <path>      # 导出到指定路径
-```
+# 导出所有信息
+hidumper --all
 
-## ArkUI 基础信息
+# 导出到指定路径
+hidumper --all -s <path>
 
-### 获取应用窗口信息
-
-```bash
-hidumper --window <pid>
-```
-
-### 获取组件树
-
-```bash
-hidumper --inspector <pid>
-```
-
-### 获取路由栈
-
-```bash
-hidumper --router <pid>
+# 指定路径导出
+hidumper -s <path>
 ```
 
 ## 常用命令示例
@@ -176,9 +144,15 @@ hidumper --mem | head -30
 watch hidumper --cpuusage
 
 # 查看特定应用内存
-ps | grep <app_name>  # 获取 pid
+ps | grep <app_name>              # 获取 pid
 hidumper --mem <pid>
 
 # 导出完整系统信息
 hidumper --all -s /data/local/tmp/dump.zip
+
+# 查看 JS 堆并触发 GC
+hidumper --mem-jsheap <pid> --gc
+
+# 查看进程 smaps 详情
+hidumper --mem-smaps <pid> -v
 ```
