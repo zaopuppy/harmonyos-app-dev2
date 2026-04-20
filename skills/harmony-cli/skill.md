@@ -1,320 +1,150 @@
 ---
 name: harmony-cli
-description: HarmonyOS 命令行工具 - hdc, hilog, hidumper, hitrace 等
+description: |
+  HarmonyOS 命令行工具，用于设备调试、截图、安装应用、查看日志、性能分析、获取系统信息等。
+  当用户说"截图"、"截屏"、"安装应用"、"卸载应用"、"查看日志"、"查看内存"、"查看CPU"、
+  "性能分析"、"抓trace"、"查看设备信息"、"系统参数"等场景时触发。
+  支持 hdc, hilog, hidumper, hitrace, hiperf, aa, bm, param 等工具。
+  详细命令参数请查阅 reference/ 目录对应文档。
 ---
 
 # HarmonyOS 命令行工具
 
-提供 HarmonyOS 常用命令行工具的参考。
+提供 HarmonyOS 常用命令行工具的快速索引。
 
 ## 环境准备
 
-### 检查工具是否可用
-
-使用 `which`（Linux/Mac）或 `where`（Windows）检查工具是否可用：
-
 ```bash
-# Linux/Mac
-which hdc
+# 检查 hdc 是否可用
+where hdc        # Windows
+which hdc        # Linux/Mac
 
-# Windows PowerShell
-where hdc
+# hdc 通常位于 DevEco Studio/sdk/default/openharmony/toolchains/
 ```
-
-### 环境变量设置
-
-**前提**：正确设置 `DEVECO_SDK_HOME` 或 `hdc` 在 `$PATH` 中。
-
-**方式一**：设置 `DEVECO_SDK_HOME`
-
-```bash
-# Linux/Mac (bash)
-export DEVECO_HOME=$DEVECO_SDK_HOME/..
-export PATH=$DEVECO_HOME/tools/node:$PATH
-export PATH=$DEVECO_HOME/tools/ohpm/bin:$PATH
-export PATH=$DEVECO_HOME/tools/hvigor/bin:$PATH
-
-# Windows PowerShell
-$env:DEVECO_HOME = "$env:DEVECO_SDK_HOME\.."
-$env:PATH = "$env:DEVECO_HOME\tools\node;$env:PATH"
-$env:PATH = "$env:DEVECO_HOME\tools\ohpm\bin;$env:PATH"
-$env:PATH = "$env:DEVECO_HOME\tools\hvigor\bin;$env:PATH"
-```
-
-**方式二**：确保 hdc 在 PATH 中
-
-hdc 通常位于：`$DEVECO_SDK_HOME/default/openharmony/toolchains/hdc`
 
 ---
 
-## hdc 命令
+## 命令索引表
 
-hdc（HarmonyOS Device Connector）是命令行调试工具，用于与设备交互、数据传输、日志查看和应用安装。
+| 命令 | 功能 | 使用场景 |
+|------|------|----------|
+| **hdc** | 设备连接管理 | |
+| `hdc list targets` | 列出已连接设备 | 检查设备是否正常连接 |
+| `hdc tconn <ip>:8710` | TCP 连接设备 | 远程调试设备 |
+| `hdc install <path>` | 安装应用 | 部署 HAP 到设备 |
+| `hdc uninstall <pkg>` | 卸载应用 | 移除已安装应用 |
+| `hdc file send <src> <dst>` | 发送文件到设备 | 传输配置文件/资源 |
+| `hdc file recv <src> <dst>` | 从设备拉取文件 | 获取日志/截图 |
+| `hdc hilog` | 查看设备日志 | 调试应用、查看崩溃日志 |
+| `hdc shell <cmd>` | 执行 shell 命令 | 设备端操作 |
+| `hdc smode` | 提权（root） | 需要 root 权限的操作 |
+| `hdc bugreport <path>` | 获取完整故障报告 | 收集调试信息 |
+| **hilog** | 日志查看 | |
+| `hilog -L E` | 查看 Error 日志 | 快速定位错误 |
+| `hilog -T <tag>` | 按标签过滤 | 查看特定模块日志 |
+| `hilog -D <domain>` | 按 domain 过滤 | 查看特定域日志 |
+| `hilog -x` | 非阻塞退出 | 保持日志同时退出 |
+| **hidumper** | 系统信息 | |
+| `hidumper --mem` | 整机内存 | 排查内存泄漏 |
+| `hidumper --mem <pid>` | 进程内存 | 特定应用内存分析 |
+| `hidumper --cpuusage` | CPU 使用率 | 性能监控 |
+| `hidumper --services` | 服务列表 | 查看系统服务状态 |
+| `hidumper --ps` | 进程列表 | 查看运行中的进程 |
+| `hidumper --all -s <path>` | 导出所有信息 | 完整系统诊断 |
+| **hitrace** | 性能跟踪 | |
+| `hitrace -t <sec> <tags>` | 捕获 trace | 分析 UI 性能、卡顿分析 |
+| `hitrace -l` | 列出可用标签 | 查看支持的 trace 标签 |
+| **hiperf** | CPU 性能分析 | |
+| `hiperf record -p <pid> -d <sec>` | 采样记录 | 函数热点分析 |
+| `hiperf stat -p <pid> -d <sec>` | 统计 | CPU 计数器统计 |
+| **aa** | Ability 管理 | |
+| `aa start -b <pkg> -a <ability>` | 启动应用 | 启动指定 Ability |
+| `aa force-stop <pkg>` | 强制停止 | 终止应用进程 |
+| `aa dump -n <pkg>` | 打印信息 | 调试 Ability |
+| **bm** | 包管理 | |
+| `bm install -p <path>` | 安装应用 | 通过 bm 安装 |
+| `bm uninstall -n <pkg>` | 卸载应用 | 通过 bm 卸载 |
+| `bm dump -a` | 列出已安装应用 | 查看所有应用 |
+| `bm dump -n <pkg>` | 应用详情 | 查看应用信息 |
+| `bm clean -c -n <pkg>` | 清理缓存 | 清理应用缓存 |
+| **param** | 系统参数 | |
+| `param ls` | 列出系统参数 | 查看所有参数 |
+| `param get <name>` | 获取参数值 | 查询指定参数 |
+| `param set <name> <value>` | 设置参数 | 修改系统参数 |
+| `param dump` | 导出参数 | 导出系统参数 |
 
-### 全局命令
+---
 
-```bash
-hdc -h [verbose]      # 打印帮助
-hdc -v/version         # 打印版本
-hdc -l[0-6]            # 设置日志级别
-hdc -t connectkey       # 连接指定设备
-hdc checkserver         # 检查版本
-```
+## 快速执行命令
 
-### 会话命令
-
-```bash
-# 设备列表
-hdc list targets [-v]           # 列出所有设备，-v 详细信息
-
-# 连接设备
-hdc tconn key [-remove]        # TCP 连接
-hdc tconn 192.168.0.100:10178  # TCP 连接示例
-hdc tconn COM5,921600          # UART 连接
-
-# 服务控制
-hdc start [-r]                 # 启动服务，-r 重启
-hdc kill [-r]                  # 终止服务
-hdc -s [ip:]port               # 设置监听端口
-```
-
-### 设备命令
-
-```bash
-# 文件系统
-hdc target mount                # 挂载 /system 为读写
-hdc target boot                # 重启设备
-hdc target boot -bootloader     # 重启到 bootloader
-hdc target boot -recovery       # 重启到 recovery
-
-# 权限
-hdc smode [-r]                 # 提权，-r 取消权限
-
-# 调试模式
-hdc tmode usb                  # USB 调试模式
-hdc tmode port [port]         # TCP 调试模式
-hdc tmode port close           # 关闭 TCP
-```
-
-### 文件传输
-
-```bash
-# 发送文件到设备
-hdc file send [option] local remote
-
-# 从设备接收文件
-hdc file recv [option] remote local
-
-# 选项：
-# -a: 保持目标文件时间戳
-# -sync: 仅更新新文件
-# -z: 压缩传输
-# -m: 模式同步
-# -cwd: 指定工作目录
-# -b: 发送到调试应用目录
-```
-
-**示例**：
-```bash
-hdc file send /local/app.hap /data/local/tmp/app.hap
-hdc file recv /data/local/tmp/log.txt /local/log.txt
-hdc file send -b /local/config.xml /data/data/com.example/config.xml
-```
-
-### 端口转发
+直接执行（使用 `Bash` 工具）：
 
 ```bash
-hdc fport ls                     # 列出转发任务
-hdc fport rm taskstr            # 删除任务
-hdc fport tcp:8710 tcp:8710    # 正向转发
-hdc fport rport tcp:8710 tcp:8710  # 反向转发
-```
+# === 截图 ===
+hdc shell "screenshot /data/local/tmp/screenshot.png"
+hdc file recv /data/local/tmp/screenshot.png ./screenshot.png
 
-### 应用管理
-
-```bash
-# 安装应用
-hdc install [-r|-s|-cwd] src
-# -r: 替换安装
-# -s: 安装共享 bundle
-# -cwd: 指定工作目录
-
-# 卸载应用
-hdc uninstall [-k] [-s] package
-# -k: 保留数据和缓存
-# -s: 卸载共享 bundle
-```
-
-**示例**：
-```bash
+# === 应用管理 ===
 hdc install /local/app.hap
-hdc install -r /local/app.hap
 hdc uninstall com.example.app
-hdc uninstall -k com.example.app
-```
 
-### 调试命令
+# === 日志查看 ===
+hdc hilog                              # 实时日志
+hdc shell "hilog -L E -T MyApp"       # 错误日志+标签过滤
 
-```bash
-# 查看日志
-hdc hilog [-h|parse]
-hdc hilog                          # 实时查看日志
-hdc hilog -h                       # 详细帮助
+# === 系统信息 ===
+hdc shell "hidumper --mem"            # 内存
+hdc shell "hidumper --cpuusage"       # CPU
 
-# 执行 shell 命令
-hdc shell [-b bundlename] [COMMAND]
-hdc shell ls /data/log
-hdc shell "ls -la"
+# === 性能分析 ===
+hdc shell "hitrace -t 10 app graphic"  # 抓 trace 10秒
+hdc shell "hiperf record -p <pid> -d 10 -o /data/local/tmp/perf.data"
 
-# 获取设备信息
-hdc bugreport [FILE]               # 获取设备完整信息
+# === 设备状态 ===
+hdc list targets                       # 连接列表
+hdc bugreport /data/local/tmp/bug.zip  # 故障报告
 
-# 调试进程
-hdc jpid                           # 列出 JDWP 进程
-hdc track-jpid [-a|-p]            # 跟踪调试进程
-```
-
-### 安全命令
-
-```bash
-hdc keygen FILE                    # 生成公私钥对
+# === 系统参数 ===
+hdc shell param ls
+hdc shell param get <name>
+hdc shell param set <name> <value>
 ```
 
 ---
 
-## hilog 日志工具
+## 详细文档索引
 
-设备端日志查看工具。
+需要更详细的命令参数说明时，查阅：
 
-```bash
-# 实时查看日志
-hdc shell hilog
-
-# 查看帮助
-hdc shell hilog -h
-
-# 按级别过滤
-hdc shell hilog -L E               # 只看 Error
-hdc shell hilog -L D/I/W/E/F       # 多级别
-
-# 按标签过滤
-hdc shell hilog -T MyApp
-
-# 按 domain 过滤
-hdc shell hilog -D 01B06
-
-# 缓冲区
-hdc shell hilog -a 8               # 前 n 行
-hdc shell hilog -z 8                # 后 n 行
-
-# 保持日志（非阻塞退出）
-hdc shell hilog -x
-```
+| 文档 | 内容 |
+|------|------|
+| `reference/hdc.md` | hdc 完整命令、连接场景、错误码 |
+| `reference/hilog.md` | hilog 日志级别、过滤选项、落盘任务 |
+| `reference/hidumper.md` | 内存分析、JS堆、进程信息 |
+| `reference/hitrace.md` | trace 标签、录制模式、时钟类型 |
+| `reference/hiperf.md` | 采样事件、record/stat 命令 |
+| `reference/aa-tool.md` | aa start/stop/dump/attach 命令 |
+| `reference/bm-tool.md` | bm install/uninstall/dump/clean 命令 |
+| `reference/param.md` | 系统参数查看/设置/等待 |
 
 ---
 
-## hidumper 系统信息
-
-系统信息导出工具。
+## 常用组合
 
 ```bash
-hdc shell hidumper --help          # 查看帮助
+# 1. 应用调试完整流程
+hdc list targets                      # 确认连接
+hdc install /local/app.hap           # 安装
+hdc shell "hilog -T MyApp"           # 查看日志
+hdc uninstall com.example.app         # 卸载
 
-# 内存信息
-hdc shell hidumper --mem           # 整机内存
-hdc shell hidumper --mem <pid>     # 进程内存
+# 2. 性能问题排查
+hdc shell "hidumper --cpuusage"      # CPU
+hdc shell "hidumper --mem"           # 内存
+hdc shell "hitrace -t 10 app ace ark graphic"  # trace
+hdc shell "hiperf record -p <pid> -d 10 -o /data/local/tmp/perf.data"
 
-# CPU 使用
-hdc shell hidumper --cpuusage      # CPU 使用率
-hdc shell hidumper --cpufreq       # CPU 频率
-
-# 系统服务
-hdc shell hidumper --services      # 服务列表
-hdc shell hidumper --service <name>  # 服务详情
-
-# 进程信息
-hdc shell hidumper --ps            # 进程列表
-
-# 导出所有信息
-hdc shell hidumper --all -s /data/local/tmp/dump.zip
+# 3. 设备诊断
+hdc bugreport /data/local/tmp/bug.zip
+hdc shell "hidumper --all -s /data/local/tmp/dump.zip"
 ```
-
----
-
-## hitrace 跟踪工具
-
-性能跟踪采样工具。
-
-```bash
-# 查看帮助
-hdc shell hitrace -h
-
-# 列出可用标签
-hdc shell hitrace -l
-
-# 捕获 trace（10 秒）
-hdc shell hitrace -t 10 -b 204800 app graphic
-
-# 输出到文件
-hdc shell hitrace -t 10 -b 204800 app -o /data/local/tmp/trace.ftrace
-
-# 压缩
-hdc shell hitrace -t 10 -b 204800 app -z
-```
-
-常用标签：`app`、`graphic`、`ace`、`ark`、`window`、`ability`、`binder`
-
----
-
-## hiperf 性能分析
-
-CPU 性能采样工具。
-
-```bash
-# 列出支持的事件
-hdc shell hiperf list
-
-# 采样记录
-hdc shell hiperf record -p <pid> -d 10 -o /data/local/tmp/perf.data
-
-# 统计
-hdc shell hiperf stat -d 10 -p <pid>
-```
-
----
-
-## aa 工具（Ability 管理）
-
-```bash
-# 通过 hdc shell 执行
-hdc shell aa -h                    # 帮助
-hdc shell aa start -b <bundle> -a <ability>  # 启动
-hdc shell aa force-stop <bundle>    # 强制停止
-hdc shell aa dump -n <bundle>       # 打印信息
-```
-
----
-
-## bm 工具（包管理）
-
-```bash
-hdc shell bm -h                     # 帮助
-hdc shell bm install -p <path>      # 安装
-hdc shell bm uninstall -n <bundle>   # 卸载
-hdc shell bm dump -a                 # 列出已安装应用
-hdc shell bm dump -n <bundle>       # 应用详情
-hdc shell bm clean -c -n <bundle>   # 清理缓存
-```
-
----
-
-## 参考文档
-
-更多工具详情请参考 `reference/` 目录：
-- `reference/hdc.md`
-- `reference/aa-tool.md`
-- `reference/bm-tool.md`
-- `reference/hilog.md`
-- `reference/hidumper.md`
-- `reference/hitrace.md`
-- `reference/hiperf.md`
