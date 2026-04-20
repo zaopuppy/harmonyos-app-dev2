@@ -16,29 +16,168 @@ description: |
 
 ```bash
 # 检查 hdc 是否可用
-where hdc        # Windows
-which hdc        # Linux/Mac
-
-# hdc 通常位于 DevEco Studio/sdk/default/openharmony/toolchains/
+where hdc        # Windows CMD
+which hdc        # Linux/Mac/Git Bash
 ```
 
 ---
 
-## Windows Git Bash 注意事项
+## 命令执行规则
 
-**问题**：`hdc file recv` 使用相对路径（如 `./file.txt`）时，Git Bash 会把路径转换成 `C:/Program Files/Git/...`
+### hdc shell 引号规则
 
-**解决**：始终使用**绝对路径**或先 `cd` 到目标目录
+**所有 `hdc shell` 命令必须用引号包裹**，防止当前 shell 错误处理特殊字符：
 
 ```bash
-# 错误示例（Git Bash 下）
-hdc file recv /data/local/tmp/log.txt ./log.txt
+# 正确写法
+hdc shell "hilog -L E"
+hdc shell 'hidumper --mem'
 
-# 正确示例
-hdc file recv /data/local/tmp/log.txt /c/users/yourname/log.txt
-# 或
-cd /c/users/yourname
-hdc file recv /data/local/tmp/log.txt ./log.txt
+# 错误写法（当前 shell 会尝试解析）
+hdc shell hilog -L E          # 会失败
+```
+
+### 单引号、双引号、转义符规则
+
+#### 双引号 `"..."`（内层）
+
+| 特殊字符 | 行为 |
+|---------|------|
+| `\$` | 转义，美元符不展开 |
+| `\\` | 转义反斜杠 |
+| `` \` `` | 转义反引号 |
+| `\"` | 转义双引号本身 |
+| `\$` | 转义美元符 |
+| `\n`, `\t` | 转义换行、制表 |
+
+```bash
+# 示例
+hdc shell "param get \$var"           # 防止变量展开
+hdc shell "echo \"hello\""             # 输出带引号的字符串
+hdc shell "ls /data | grep \"app\""   # grep 模式含引号
+```
+
+#### 单引号 `'...'`（最简单）
+
+单引号内**所有字符都不解释**，包括 `\`、`$`、反引号 `"` 等。
+
+| 特殊字符 | 行为 |
+|---------|------|
+| 所有字符 | 原样保留 |
+| `''` | 单引号本身无法在单引号内出现 |
+
+```bash
+# 示例 - 单引号最安全
+hdc shell 'param get sys.bootevent'   # 原样传递
+hdc shell 'hilog -T $TAG'             # $TAG 不会展开
+hdc shell 'echo "hello"'              # 引号原样传递
+```
+
+#### 连续单引号技巧
+
+需要在单引号内插入单引号时，用 `'\''`（结束单引号 + 转义单引号 + 开始单引号）：
+
+```bash
+# 输出: hello'world
+hdc shell 'echo hello'\''world'
+
+# 命令含单引号的场景
+hdc shell 'param set key value'\''s'
+```
+
+#### 反斜杠转义 `\`
+
+单个字符前加 `\` 表示该字符不解释：
+
+```bash
+# 示例
+hdc shell "ls /data\|grep app"       # 管道符不展开
+hdc shell "echo \$PATH"               # 变量不展开
+hdc shell "echo \\n"                  # 输出 \n 原样
+```
+
+### 不同 Shell 的特殊处理
+
+| Shell | 推荐引号 | 注意事项 |
+|-------|---------|---------|
+| **Git Bash** | 双引号 `"..."` | `$` `` ` `` `\` 需要转义；`` ` `` 无法转义，用单引号 |
+| **PowerShell** | 单引号 `'...'` | `$` 在单引号内不展开；双引号内 `$` 会展开 |
+| **CMD** | 双引号 `"..."` | `^` 是转义符；`%` 是变量符需 `%%` 转义 |
+
+```bash
+# === Git Bash ===
+hdc shell "hilog -T \$MY_TAG"                    # 变量不展开
+hdc shell 'param set key value'                  # 单引号最安全
+hdc shell "echo hello\\n"                         # 输出 hello\n
+
+# === PowerShell ===
+hdc shell 'hilog -T $MY_TAG'                     # 单引号内 $ 不展开
+hdc shell "param set key \$val"                   # 双引号内 \$ 防止展开
+hdc shell 'ls /data | grep "app"'                # 双引号管道OK
+
+# === CMD ===
+hdc shell "hilog -T mytag"                        # 基本直接用
+hdc shell "echo %%var%%"                          # 变量需双 %
+```
+
+### 常见错误与修正
+
+| 错误写法 | 正确写法 | 原因 |
+|---------|---------|------|
+| `hdc shell "ls /data|grep app"` | `hdc shell "ls /data \| grep app"` | 管道符被当前 shell 解析 |
+| `hdc shell "param get $key"` | `hdc shell 'param get $key'` 或 `hdc shell "param get \$key"` | 变量在本地展开 |
+| `hdc shell 'it's not found'` | `hdc shell 'it'\''s not found'` 或 `hdc shell "it'S not found"` | 单引号内无法直接放单引号 |
+| `hdc shell "echo "$var""` | `hdc shell 'echo '$var''` 或 `hdc shell "echo \$var"` | 嵌套引号问题 |
+
+### hdc shell 命令限制
+
+**可用命令：** `ls`, `cd`, `cat`, `grep`, `awk`, `sed`, `find`, `ps`, `top`, `kill`, `mkdir`, `rm`, `cp`, `mv`, `chmod`, `pwd`, `echo`, `test` 等基础命令
+
+**不可用：** `python`, `node`, `bash脚本`, `管道组合`（需要用引号包裹整个命令让设备端执行）
+
+```bash
+# 错误 - 设备端没有 python
+hdc shell "python /data/local/tmp/script.py"
+
+# 正确 - 使用设备端已有命令
+hdc shell "cat /data/local/tmp/log.txt | grep error"  # 设备端支持管道
+```
+
+### Windows 文件传输
+
+`hdc file send/recv` 在 Windows 下需要根据当前 shell 选择正确执行方式：
+
+#### Git Bash 环境
+
+Git Bash 会错误转换 hdc 的设备路径（如 `/data/...` 被转换成 `C:/Program Files/Git/...`）。
+
+```bash
+# 错误 - Git Bash 会转换路径
+hdc file recv /data/local/tmp/screen.png ./screen.png
+# 错误: path:C:/Program Files/Git/data/local/tmp/screen.png
+
+# 正确 - 调用 PowerShell 执行
+powershell -ExecutionPolicy Bypass -Command 'hdc file recv /data/local/tmp/screen.png C:\temp\screen.png'
+
+# 正确 - 调用 CMD 执行
+cmd /c 'hdc file recv /data/local/tmp/screen.png .\screen.png'
+```
+
+#### PowerShell 环境
+
+PowerShell 环境下也需要注意执行策略：
+
+```bash
+# 如果遇到执行策略错误
+powershell -ExecutionPolicy Bypass -Command 'hdc file recv /data/local/tmp/screen.png C:\temp\screen.png'
+```
+
+#### CMD 环境
+
+CMD 环境通常可以直接使用：
+
+```bash
+cmd /c 'hdc file recv /data/local/tmp\screen.png .\screen.png'
 ```
 
 ---
@@ -51,11 +190,11 @@ hdc file recv /data/local/tmp/log.txt ./log.txt
 | `hdc list targets` | 列出已连接设备 | 检查设备是否正常连接 |
 | `hdc tconn <ip>:8710` | TCP 连接设备 | 远程调试设备 |
 | `hdc install <path>` | 安装应用 | 部署 HAP 到设备 |
-| `hdc uninstall <pkg>` | 卸载应用 | 移除已安装应用 |
+| `hdc uninstall -k <pkg>` | 卸载应用 | 移除已安装应用（-k 保留数据） |
 | `hdc file send <src> <dst>` | 发送文件到设备 | 传输配置文件/资源 |
-| `hdc file recv <src> <dst>` | 从设备拉取文件 | 获取日志/截图 |
+| `hdc file recv <src> <dst>` | 从设备拉取文件 | 获取日志/截图（本地用绝对路径） |
 | `hdc hilog` | 查看设备日志 | 调试应用、查看崩溃日志 |
-| `hdc shell <cmd>` | 执行 shell 命令 | 设备端操作 |
+| `hdc shell <cmd>` | 执行 shell 命令 | 设备端操作（必须引号包裹） |
 | `hdc smode` | 提权（root） | 需要 root 权限的操作 |
 | `hdc bugreport <path>` | 获取完整故障报告 | 收集调试信息 |
 | **hilog** | 日志查看 | |
@@ -68,7 +207,7 @@ hdc file recv /data/local/tmp/log.txt ./log.txt
 | `hidumper --mem <pid>` | 进程内存 | 特定应用内存分析 |
 | `hidumper --cpuusage` | CPU 使用率 | 性能监控 |
 | `hidumper --services` | 服务列表 | 查看系统服务状态 |
-| `hidumper --ps` | 进程列表 | 查看运行中的进程 |
+| `ps -ef` | 进程列表 | 查看运行中的进程 |
 | `hidumper --all -s <path>` | 导出所有信息 | 完整系统诊断 |
 | **hitrace** | 性能跟踪 | |
 | `hitrace -t <sec> <tags>` | 捕获 trace | 分析 UI 性能、卡顿分析 |
@@ -92,56 +231,78 @@ hdc file recv /data/local/tmp/log.txt ./log.txt
 | `param set <name> <value>` | 设置参数 | 修改系统参数 |
 | `param dump` | 导出参数 | 导出系统参数 |
 | **uitest** | UI 测试 | |
-| `uitest screenCap` | 屏幕截图 | 获取当前屏幕快照 |
-| `uitest dumpLayout` | 布局导出 | 获取界面布局信息 |
+| `uitest screenCap -p <path>` | 屏幕截图 | 获取当前屏幕快照 |
+| `uitest dumpLayout -p <path>` | 布局导出 | 获取界面布局信息 |
 | `uitest uiInput click <x> <y>` | 点击 | 模拟点击操作 |
 | `uitest uiInput swipe` | 滑动 | 模拟滑动操作 |
-| `uitest uiInput text` | 文本输入 | 模拟文本输入 |
+| `uitest uiInput text <content>` | 文本输入 | 模拟文本输入 |
 
 ---
 
 ## 快速执行命令
 
-直接执行（使用 `Bash` 工具）：
+### 截图
 
 ```bash
-# === 截图 ===
-# 注意：Windows 下请用绝对路径替换 ./xxx
-hdc shell "screenshot /data/local/tmp/screenshot.png"
-hdc file recv /data/local/tmp/screenshot.png <本地绝对路径>/screenshot.png
-hdc shell uitest screenCap -p /data/local/tmp/screen.png
+# 截图（设备端）
+hdc shell "uitest screenCap -p /data/local/tmp/screen.png"
 
-# === 应用管理 ===
-hdc install /local/app.hap
-hdc uninstall com.example.app
+# 拉取到本地（Git Bash 需调用 PowerShell/CMD）
+powershell -ExecutionPolicy Bypass -Command 'hdc file recv /data/local/tmp/screen.png C:\temp\screen.png'
+# 或
+cmd /c 'hdc file recv /data/local/tmp/screen.png .\screen.png'
+```
 
-# === 日志查看 ===
-hdc hilog                              # 实时日志
-hdc shell "hilog -L E -T MyApp"       # 错误日志+标签过滤
+### 应用管理
 
-# === 系统信息 ===
-hdc shell "hidumper --mem"            # 内存
-hdc shell "hidumper --cpuusage"       # CPU
+```bash
+hdc install /c/users/yourname/app.hap
+hdc uninstall -k com.example.app
+```
 
-# === 性能分析 ===
-hdc shell "hitrace -t 10 app graphic"  # 抓 trace 10秒
+### 日志查看
+
+```bash
+hdc hilog                                    # 实时日志（阻塞）
+hdc shell "hilog -L E -T MyApp"             # 错误+标签过滤
+hdc shell "hilog -x -L E"                    # 非阻塞查看错误
+```
+
+### 系统信息
+
+```bash
+hdc shell "hidumper --mem"                   # 整机内存
+hdc shell "hidumper --cpuusage"               # CPU 使用率
+hdc shell "hidumper --services"              # 服务列表
+hdc shell "ps -ef"                           # 进程列表
+```
+
+### 性能分析
+
+```bash
+hdc shell "hitrace -t 10 -b 204800 app graphic"   # 抓 trace 10秒
 hdc shell "hiperf record -p <pid> -d 10 -o /data/local/tmp/perf.data"
+hdc shell "hiperf stat -p <pid> -d 10"
+```
 
-# === 设备状态 ===
-hdc list targets                       # 连接列表
-hdc bugreport /data/local/tmp/bug.zip  # 故障报告
+### 设备状态
 
-# === 系统参数 ===
-hdc shell param ls
-hdc shell param get <name>
-hdc shell param set <name> <value>
+```bash
+hdc list targets
+hdc bugreport /data/local/tmp/bug.zip
+```
+
+### 系统参数
+
+```bash
+hdc shell "param ls"
+hdc shell "param get sys.bootevent"
+hdc shell "param set debug.test 1"
 ```
 
 ---
 
 ## 详细文档索引
-
-需要更详细的命令参数说明时，查阅：
 
 | 文档 | 内容 |
 |------|------|
@@ -154,25 +315,3 @@ hdc shell param set <name> <value>
 | `reference/bm-tool.md` | bm install/uninstall/dump/clean 命令 |
 | `reference/param.md` | 系统参数查看/设置/等待 |
 | `reference/uitest.md` | UI 测试：截图、布局、点击、滑动、输入 |
-
----
-
-## 常用组合
-
-```bash
-# 1. 应用调试完整流程
-hdc list targets                      # 确认连接
-hdc install /local/app.hap           # 安装
-hdc shell "hilog -T MyApp"           # 查看日志
-hdc uninstall com.example.app         # 卸载
-
-# 2. 性能问题排查
-hdc shell "hidumper --cpuusage"      # CPU
-hdc shell "hidumper --mem"           # 内存
-hdc shell "hitrace -t 10 app ace ark graphic"  # trace
-hdc shell "hiperf record -p <pid> -d 10 -o /data/local/tmp/perf.data"
-
-# 3. 设备诊断
-hdc bugreport /data/local/tmp/bug.zip
-hdc shell "hidumper --all -s /data/local/tmp/dump.zip"
-```
