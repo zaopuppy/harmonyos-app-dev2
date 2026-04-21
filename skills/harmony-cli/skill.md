@@ -156,28 +156,31 @@ Git Bash 会错误转换 hdc 的设备路径（如 `/data/...` 被转换成 `C:/
 hdc file recv /data/local/tmp/screen.png ./screen.png
 # 错误: path:C:/Program Files/Git/data/local/tmp/screen.png
 
-# 正确 - 调用 PowerShell 执行
-powershell -ExecutionPolicy Bypass -Command 'hdc file recv /data/local/tmp/screen.png C:\temp\screen.png'
+# 正确 - 使用 cmd //c 执行（推荐）
+cmd //c "hdc file recv /data/local/tmp/screen.png C:\temp\screen.png"
 
-# 正确 - 调用 CMD 执行
-cmd /c 'hdc file recv /data/local/tmp/screen.png .\screen.png'
+# 也可以使用 PowerShell（但需要处理执行策略）
+powershell -ExecutionPolicy Bypass -Command "hdc file recv /data/local/tmp/screen.png C:\temp\screen.png"
 ```
 
 #### PowerShell 环境
 
-PowerShell 环境下也需要注意执行策略：
+PowerShell 环境下也可能遇到执行策略问题：
 
 ```bash
-# 如果遇到执行策略错误
-powershell -ExecutionPolicy Bypass -Command 'hdc file recv /data/local/tmp/screen.png C:\temp\screen.png'
+# 推荐使用 cmd //c
+cmd //c "hdc file recv /data/local/tmp/screen.png C:\temp\screen.png"
+
+# 或强制绕过执行策略
+powershell -ExecutionPolicy Bypass -Command "hdc file recv /data/local/tmp/screen.png C:\temp\screen.png"
 ```
 
 #### CMD 环境
 
-CMD 环境通常可以直接使用：
+CMD 环境可以直接使用：
 
 ```bash
-cmd /c 'hdc file recv /data/local/tmp\screen.png .\screen.png'
+cmd /c "hdc file recv /data/local/tmp\screen.png .\screen.png"
 ```
 
 ---
@@ -216,9 +219,10 @@ cmd /c 'hdc file recv /data/local/tmp\screen.png .\screen.png'
 | `hiperf record -p <pid> -d <sec>` | 采样记录 | 函数热点分析 |
 | `hiperf stat -p <pid> -d <sec>` | 统计 | CPU 计数器统计 |
 | **aa** | Ability 管理 | |
-| `aa start -b <pkg> -a <ability>` | 启动应用 | 启动指定 Ability |
+| `aa start -b <pkg> -a <ability>` | 启动应用 | 需先查询 Ability 名称 |
 | `aa force-stop <pkg>` | 强制停止 | 终止应用进程 |
-| `aa dump -n <pkg>` | 打印信息 | 调试 Ability |
+| `aa dump -n <pkg>` | 查询 Ability | 查看应用所有 Ability |
+| `aa dump -a` | 查询所有 Ability | 列出设备上所有 Ability |
 | **bm** | 包管理 | |
 | `bm install -p <path>` | 安装应用 | 通过 bm 安装 |
 | `bm uninstall -n <pkg>` | 卸载应用 | 通过 bm 卸载 |
@@ -247,18 +251,25 @@ cmd /c 'hdc file recv /data/local/tmp\screen.png .\screen.png'
 # 截图（设备端）
 hdc shell "uitest screenCap -p /data/local/tmp/screen.png"
 
-# 拉取到本地（Git Bash 需调用 PowerShell/CMD）
-powershell -ExecutionPolicy Bypass -Command 'hdc file recv /data/local/tmp/screen.png C:\temp\screen.png'
-# 或
-cmd /c 'hdc file recv /data/local/tmp/screen.png .\screen.png'
+# 拉取到本地（Windows 下使用 cmd //c）
+cmd //c "hdc file recv /data/local/tmp/screen.png C:\temp\screen.png"
 ```
 
-### 应用管理
+### 应用启动
+
+**必须先查询 Ability 名称**，否则会启动失败：
 
 ```bash
-hdc install /c/users/yourname/app.hap
-hdc uninstall -k com.example.app
+# 1. 查询应用的所有 Ability
+hdc shell "bm dump -n com.example.app" 2>&1 | grep '"name":'
+# 或
+hdc shell "aa dump -a" 2>&1 | grep -A10 "com.example.app"
+
+# 2. 根据查询结果，使用正确的 ability 名称启动
+hdc shell "aa start -b com.example.app -a MainAbility"
 ```
+
+**常见错误**：`fail: unknown option` 或启动无反应，通常是 ability 名称不正确。
 
 ### 日志查看
 

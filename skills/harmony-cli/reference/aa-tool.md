@@ -28,6 +28,46 @@ aa <command> -h
 | `process` | 应用调试/调优 |
 | `send-memory-level` | 内存级别回调 |
 
+## 查询 Ability
+
+**启动应用前必须先查询 Ability 名称**，否则会启动失败。
+
+### aa dump 查询
+
+```bash
+# 查询指定应用的所有 Ability
+aa dump -a | grep -A10 "<bundle-name>"
+
+# 查询结果示例
+# AbilityRecord ID #1358
+#   bundle name [com.example.app]
+#   main name [MainAbility]          <-- 这就是 ability 名称
+```
+
+### bm dump 查询
+
+```bash
+# 查询应用详情（包含 ability 信息）
+bm dump -n <bundle-name>
+
+# 在输出中搜索 ability 名称
+bm dump -n <bundle-name> | grep '"name":'
+```
+
+### 正确启动流程
+
+```bash
+# 1. 查询应用的 ability 名称
+aa dump -a | grep -A5 "com.example.app"
+
+# 2. 使用查询到的 ability 名称启动
+aa start -b com.example.app -a MainAbility
+```
+
+**常见错误**：`fail: unknown option` 或启动无反应 → 请先查询正确的 ability 名称。
+
+---
+
 ## start 命令 - 启动应用
 
 ### 语法
