@@ -88,15 +88,16 @@ def find_hdc() -> str:
 def derive_sdk_home_from_hdc(hdc_path: str) -> str:
     """
     Derive DEVECO_SDK_HOME from an hdc binary path.
-    Example: /path/to/sdk/default/openharmony/toolchains/hdc
-    → /path/to/sdk/default
-    The hdc toolchain is always at {DEVECO_SDK_HOME}/openharmony/toolchains/hdc,
-    so strip the toolchains/hdc part to get DEVECO_SDK_HOME.
+    hdc is always at {DEVECO_SDK_HOME}/default/openharmony/toolchains/hdc[.exe],
+    so strip '/default/openharmony/toolchains/hdc[.exe]' to recover DEVECO_SDK_HOME.
+
+    Example:
+        C:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/toolchains/hdc.exe
+        → C:/Program Files/Huawei/DevEco Studio/sdk
     """
     normalized = hdc_path.replace('\\', '/')
 
-    # Strip the toolchain suffix: /openharmony/toolchains/hdc or /openharmony/toolchains/hdc.exe
-    for suffix in ('/openharmony/toolchains/hdc.exe', '/openharmony/toolchains/hdc'):
+    for suffix in ('/default/openharmony/toolchains/hdc.exe', '/default/openharmony/toolchains/hdc'):
         if normalized.endswith(suffix):
             return normalized[:-len(suffix)]
 

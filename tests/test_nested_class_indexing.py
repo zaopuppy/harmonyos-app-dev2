@@ -65,7 +65,7 @@ def test_parse_dts_file_returns_tuple():
     """Test that _parse_dts_file returns (ModuleInfo, List[NestedClass])."""
     sdk_home = get_sdk_or_fail()
     indexer = SDKIndexer(sdk_home=sdk_home, index_path=".sdk_index.json")
-    dts_file = os.path.join(sdk_home, "openharmony/ets/api/@ohos.web.webview.d.ts")
+    dts_file = os.path.join(sdk_home, "default/openharmony/ets/api/@ohos.web.webview.d.ts")
     result = indexer._parse_dts_file(dts_file)
     assert isinstance(result, tuple), f"Expected tuple, got {type(result)}"
     assert len(result) == 2, f"Expected 2 elements, got {len(result)}"

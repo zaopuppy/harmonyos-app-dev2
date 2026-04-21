@@ -12,12 +12,12 @@ from typing import Dict, Optional, List, Iterator, Tuple
 
 
 SDK_SUBDIRS = [
-    "openharmony/ets/api",
-    "openharmony/ets/arkts",
-    "openharmony/ets/component",
-    "openharmony/ets/kits",
-    "hms/etc/api",
-    "hms/etc/kits",
+    "default/openharmony/ets/api",
+    "default/openharmony/ets/arkts",
+    "default/openharmony/ets/component",
+    "default/openharmony/ets/kits",
+    "default/hms/etc/api",
+    "default/hms/etc/kits",
 ]
 
 
