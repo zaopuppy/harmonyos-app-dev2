@@ -262,6 +262,23 @@ class SDKIndexer:
                         line_number=ns_line
                     )
 
+        # Process: declare [abstract] class Foo { } + separate export default Foo;
+        # This covers the common HarmonyOS pattern where declaration and export are on separate lines.
+        for match in re.finditer(r'\bdeclare\s+(?:abstract\s+)?class\s+(\w+)\b', clean_content):
+            class_name = match.group(1)
+            if class_name in classes:
+                continue
+            if not re.search(rf'\bexport\s+default\s+{re.escape(class_name)}\s*;', clean_content):
+                continue
+            body, _ = extract_body(clean_content, match.end())
+            if body is not None:
+                classes[class_name] = ClassInfo(
+                    members=extract_members(body),
+                    statics=[],
+                    export_type="default",
+                    line_number=pos_to_line(content, match.start())
+                )
+
         # If no classes/namespaces found, check if this is a barrel file (re-export module)
         if not classes:
             return None, []
