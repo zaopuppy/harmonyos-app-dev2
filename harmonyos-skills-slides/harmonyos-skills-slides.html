@@ -230,6 +230,7 @@
             line-height: 1.7;
             overflow-x: auto;
             position: relative;
+            white-space: pre-wrap;
         }
 
         .code-block::before {
@@ -679,6 +680,11 @@
         .query-demo .result {
             color: var(--accent-green);
             margin-top: 8px;
+            white-space: pre-wrap;
+        }
+
+        .query-demo .result span {
+            display: block;
         }
 
         .query-demo .result .ok::before {
@@ -859,28 +865,22 @@
             <!-- Image placeholders for problematic code -->
             <div class="image-pair reveal">
                 <div class="image-container">
-                    <!-- Replace with actual screenshot 1 -->
-                    <div style="background: #1a1a2e; min-height: 200px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: var(--small-size);">
-                        <span class="badge badge-red">问题截图 1</span>
-                    </div>
+                    <img src="bad-api.png" alt="API 不存在问题截图">
                     <div class="label">
-                        <span class="badge badge-red">编译错误</span><br>
+                        <span class="badge badge-red">API 幻觉</span><br>
                         <span style="color: var(--text-secondary);">Property 'captureSnapshot' does not exist</span>
                     </div>
                 </div>
                 <div class="image-container">
-                    <!-- Replace with actual screenshot 2 -->
-                    <div style="background: #1a1a2e; min-height: 200px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: var(--small-size);">
-                        <span class="badge badge-red">问题截图 2</span>
-                    </div>
+                    <img src="bad-import.png" alt="Import 错误截图">
                     <div class="label">
-                        <span class="badge badge-red">API 不存在</span><br>
-                        <span style="color: var(--text-secondary);">Module '@ohos.app.ability' not found</span>
+                        <span class="badge badge-red">Import 错误</span><br>
+                        <span style="color: var(--text-secondary);">Module path incorrect</span>
                     </div>
                 </div>
             </div>
             <p class="reveal" style="margin-top: var(--element-gap); font-size: var(--small-size); color: var(--text-secondary); text-align: center;">
-                鼠标悬停放大 · 请替换为实际编译错误截图
+                鼠标悬停放大
             </p>
         </div>
         <div class="slide-number">02</div>
@@ -999,23 +999,35 @@
                 </div>
             </div>
 
-            <div class="code-block reveal" style="margin-top: var(--content-gap);">
-<span class="code-comment">// TypeScript 特性在 ArkTS 中不允许</span>
-
-<span class="code-error">let data: any;</span>                    <span class="code-comment">// ✗ 错误！禁用 any 类型</span>
-
+            <div class="grid-2 reveal" style="margin-top: var(--content-gap); gap: var(--content-gap);">
+                <div class="code-block" style="border-color: rgba(255, 71, 87, 0.4);">
+                    <div style="color: var(--accent-red); font-weight: 600; margin-bottom: 12px;">✗ ArkTS 不允许</div>
+<span class="code-error">let data: any;</span>
+<span class="code-comment">// ✗ 禁用 any 类型</span>
 <span class="code-keyword">let</span> value: unknown;
-(value <span class="code-keyword">as</span> string).length;        <span class="code-comment">// ✗ 错误！unknown 断言</span>
-
+(value <span class="code-keyword">as</span> string).length;
+<span class="code-comment">// ✗ unknown 断言</span>
 <span class="code-keyword">let</span> obj = {};
-obj[<span class="code-string">'key'</span>] = value;           <span class="code-comment">// ✗ 错误！动态属性访问</span>
-
-<span class="code-keyword">class</span> <span class="code-type">A</span> { x: <span class="code-type">number</span> = 0; }
-<span class="code-keyword">class</span> <span class="code-type">B</span> { x: <span class="code-type">number</span> = 0; }
-<span class="code-keyword">let</span> a: <span class="code-type">A</span> = <span class="code-keyword">new</span> <span class="code-type">B</span>();        <span class="code-comment">// ✗ 错误！结构化类型</span>
-
-<span class="code-keyword">type</span> <span class="code-type">T</span> = <span class="code-keyword">typeof</span> someVar;       <span class="code-comment">// ✗ 错误！typeof 用于类型</span>
-<span class="code-keyword">type</span> <span class="code-type">K</span> = <span class="code-keyword">keyof</span> SomeType;     <span class="code-comment">// ✗ 错误！keyof 操作符</span>
+obj[<span class="code-string">'key'</span>] = value;
+<span class="code-comment">// ✗ 动态属性访问</span>
+<span class="code-keyword">type</span> <span class="code-type">T</span> = <span class="code-keyword">typeof</span> someVar;
+<span class="code-comment">// ✗ typeof 用于类型</span>
+                </div>
+                <div class="code-block" style="border-color: rgba(0, 255, 136, 0.4);">
+                    <div style="color: var(--accent-green); font-weight: 600; margin-bottom: 12px;">✓ 正确写法</div>
+<span class="code-keyword">let</span> data: <span class="code-type">string</span> = <span class="code-string">'hello'</span>;
+<span class="code-comment">// ✓ 显式类型</span>
+<span class="code-keyword">let</span> value: <span class="code-type">unknown</span>;
+<span class="code-keyword">if</span> (value <span class="code-keyword">instanceof</span> <span class="code-type">string</span>) {
+    value.length;
+}
+<span class="code-comment">// ✓ 类型守卫</span>
+<span class="code-keyword">let</span> obj: <span class="code-type">Record</span>&lt;<span class="code-type">string</span>, <span class="code-type">number</span>&gt; = {};
+obj[<span class="code-string">'key'</span>] = 1;
+<span class="code-comment">// ✓ Record 类型</span>
+<span class="code-keyword">class</span> <span class="code-type">B</span> <span class="code-keyword">extends</span> <span class="code-type">A</span> {}
+<span class="code-comment">// ✓ 必须继承关系</span>
+                </div>
             </div>
 
             <div class="strategy-tag strategy-do reveal" style="margin-top: var(--content-gap);">
@@ -1105,17 +1117,34 @@ obj[<span class="code-string">'key'</span>] = value;           <span class="code
                 <div class="card">
                     <span class="badge badge-red">✗ 幻觉</span>
                     <div class="code-block" style="margin-top: var(--element-gap); padding: 0.75rem;">
-<span class="code-comment">// 大模型可能生成：</span>
-controller.<span class="code-error">captureSnapshot</span>()
-<span class="code-comment">// 实际不存在此方法</span>
+<span class="code-type">Text</span>(<span class="code-string">'截图'</span>)
+  .fontSize(<span class="code-type">16</span>)
+  .width(<span class="code-string">'100%'</span>)
+  .padding(<span class="code-type">12</span>)
+  .onClick(() => {
+    <span class="code-keyword">this</span>.controller.<span class="code-error">captureSnapshot</span>((err, pixelMap) => {
+      <span class="code-keyword">if</span> (!err) {
+        console.info(<span class="code-string">'Screenshot captured'</span>);
+      }
+    });
+  })
+<span class="code-comment">// ✗ captureSnapshot 不存在</span>
                     </div>
                 </div>
                 <div class="card">
-                    <span class="badge badge-orange">✗ 旧 API</span>
+                    <span class="badge badge-green">✓ 正确</span>
                     <div class="code-block" style="margin-top: var(--element-gap); padding: 0.75rem;">
-<span class="code-comment">// 已废弃的写法：</span>
-<span class="code-keyword">import</span> web from <span class="code-string">'@ohos.web.webview'</span>
-<span class="code-comment">// 新 API 应使用 @kit.ArkWeb</span>
+<span class="code-type">Text</span>(<span class="code-string">'截图'</span>)
+  .fontSize(<span class="code-type">16</span>)
+  .width(<span class="code-string">'100%'</span>)
+  .padding(<span class="code-type">12</span>)
+  .onClick(() => {
+    <span class="code-keyword">this</span>.controller.<span class="code-member">webPageSnapshot</span>({ id: <span class="code-string">'screenshot'</span> }, (err: <span class="code-type">Error</span>, result: web_webview.<span class="code-type">SnapshotResult</span>) => {
+      <span class="code-keyword">if</span> (!err) {
+        console.info(<span class="code-string">'Screenshot captured'</span>);
+      }
+    });
+<span class="code-comment">// ✓ 正确方法：webPageSnapshot</span>
                     </div>
                 </div>
             </div>
@@ -1161,10 +1190,7 @@ controller.<span class="code-error">captureSnapshot</span>()
 
             <div class="query-demo reveal" style="margin-top: var(--content-gap);">
                 <div class="prompt">python check_sdk_imports.py --query "WebviewController"</div>
-                <div class="result">
-<span class="ok">@ohos.web.webview.webview.WebviewController</span>
-<span class="ok">@kit.ArkWeb.webview.WebviewController</span>
-                </div>
+                <div class="result"><span class="ok">@ohos.web.webview.webview.WebviewController</span><span class="ok">@kit.ArkWeb.webview.WebviewController</span></div>
             </div>
 
             <div class="strategy-tag strategy-do reveal" style="margin-top: var(--content-gap);">
@@ -1192,33 +1218,14 @@ controller.<span class="code-error">captureSnapshot</span>()
                     <h3 style="color: var(--text-secondary); font-size: var(--body-size); margin-bottom: var(--element-gap);">查询类的所有成员</h3>
                     <div class="query-demo">
                         <div class="prompt">python check_sdk_imports.py --query "@ohos.web.webview.webview.WebviewController"</div>
-                        <div class="result">
-<span class="ok">WebviewController [ets/api/@ohos.web.webview.d.ts:3579]</span>
-<span class="member">constructor</span>
-<span class="member">initializeWebEngine</span>
-<span class="member">setActiveWebEngineVersion</span>
-<span class="member">getActiveWebEngineVersion</span>
-<span class="member">setHttpDns</span>
-<span class="member">setWebDebuggingAccess</span>
-<span class="member">forward</span>
-<span class="member">backward</span>
-<span class="member">clearHistory</span>
-<span class="member">...</span>
-                        </div>
+                        <div class="result"><span class="ok">WebviewController [ets/api/@ohos.web.webview.d.ts:3579]</span><span class="member">constructor</span><span class="member">initializeWebEngine</span><span class="member">setActiveWebEngineVersion</span><span class="member">getActiveWebEngineVersion</span><span class="member">setHttpDns</span><span class="member">setWebDebuggingAccess</span><span class="member">forward</span><span class="member">backward</span><span class="member">clearHistory</span><span class="member">...</span></div>
                     </div>
                 </div>
                 <div>
                     <h3 style="color: var(--text-secondary); font-size: var(--body-size); margin-bottom: var(--element-gap);">智能纠错推荐</h3>
                     <div class="query-demo">
                         <div class="prompt">python check_sdk_imports.py --query "WebviewController#captureSnapshot"</div>
-                        <div class="result" style="color: var(--accent-red);">
-<span class="ok" style="color: var(--accent-red);">[✗] WebviewController#captureSnapshot</span>
-<span style="color: var(--text-secondary);">member 'captureSnapshot' not found</span>
-<span style="color: var(--accent-green);">Did you mean:</span>
-<span class="member">webPageSnapshot</span>
-<span class="member">snapshot</span>
-<span class="member">getBitmap</span>
-                        </div>
+                        <div class="result" style="color: var(--accent-red);"><span style="color: var(--accent-red);">[✗] WebviewController#captureSnapshot</span><span style="color: var(--text-secondary);">member 'captureSnapshot' not found</span><span style="color: var(--accent-green);">Did you mean:</span><span class="member">webPageSnapshot</span><span class="member">snapshot</span><span class="member">getBitmap</span></div>
                     </div>
 
                     <div class="card" style="margin-top: var(--content-gap); border-color: rgba(0, 255, 136, 0.3);">
