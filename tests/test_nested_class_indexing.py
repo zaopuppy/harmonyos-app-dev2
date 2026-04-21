@@ -221,6 +221,30 @@ def test_query_result_has_filepath():
     print(f"PASS: test_query_result_has_filepath ({results[0].file_path}:{results[0].line_number})")
 
 
+def test_partial_query_result_has_filepath():
+    """Test that partial member queries include the .d.ts file path and line number."""
+    from check_sdk_imports import query_mode
+
+    sdk_home = get_sdk_or_fail()
+    indexer = get_or_build_index(sdk_home, ".sdk_index.json")
+
+    results = query_mode("webPageSnapshot", indexer)
+    assert len(results) >= 1, "Expected at least one partial query result"
+
+    target = next(
+        (r for r in results if r.item == "@ohos.web.webview.webview.WebviewController#webPageSnapshot"),
+        None
+    )
+    assert target is not None, "Expected webPageSnapshot member result"
+    assert target.file_path, "file_path should not be empty for partial member query"
+    assert "@ohos.web.webview.d.ts" in target.file_path, \
+        f"Expected file_path to contain @ohos.web.webview.d.ts, got {target.file_path}"
+    assert target.line_number == 3579, \
+        f"Expected line_number=3579, got {target.line_number}"
+
+    print(f"PASS: test_partial_query_result_has_filepath ({target.file_path}:{target.line_number})")
+
+
 def test_recommendation_no_fake_module_paths():
     """Test that recommendations don't include fake module paths.
 
@@ -329,6 +353,7 @@ def run_all_tests():
     test_query_member_no_duplicate_path()
     test_query_nonexistent_member_recommendation()
     test_query_result_has_filepath()
+    test_partial_query_result_has_filepath()
     test_recommendation_no_fake_module_paths()
     test_interface_properties_not_extracted_as_members()
 

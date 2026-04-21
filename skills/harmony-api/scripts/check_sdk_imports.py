@@ -401,7 +401,12 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
                             # use mod_name to check if the module exists - this is a valid nested class path
                             if not indexer.get(mod_name):
                                 continue
-                        member_results.append(path)
+                        member_results.append(CheckResult(
+                            path,
+                            Status.OK,
+                            file_path=mod_info.file,
+                            line_number=class_info.line_number
+                        ))
 
         if not module_matches and not member_results:
             return [CheckResult(query_str, Status.MODULE_NOT_FOUND, "no matching modules or members found")]
@@ -414,11 +419,10 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
                 seen.add(m)
                 mod_info = indexer.get(m)
                 unique_results.append(CheckResult(m, Status.OK, file_path=mod_info.file if mod_info else ""))
-        for m in member_results[:10]:
-            if m not in seen:
-                seen.add(m)
-                mod_info = indexer.get(m)
-                unique_results.append(CheckResult(m, Status.OK, file_path=mod_info.file if mod_info else ""))
+        for result in member_results[:10]:
+            if result.item not in seen:
+                seen.add(result.item)
+                unique_results.append(result)
 
         return unique_results
 
