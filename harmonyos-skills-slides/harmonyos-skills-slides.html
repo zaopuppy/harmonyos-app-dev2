@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HarmonyOS 应用开发技能</title>
+
+    <style>
+        /* ===========================================
+           LOCAL FONTS (offline)
+           =========================================== */
+        @font-face {
+            font-family: 'Clash Display';
+            src: url('fonts/clash-display-500.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Clash Display';
+            src: url('fonts/clash-display-600.woff2') format('woff2');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Clash Display';
+            src: url('fonts/clash-display-700.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Satoshi';
+            src: url('fonts/satoshi-400.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Satoshi';
+            src: url('fonts/satoshi-500.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Satoshi';
+            src: url('fonts/satoshi-700.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (THEME)
+           Neon Cyber: Deep navy + cyan/magenta accents
+           =========================================== */
+        :root {
+            /* Colors */
+            --bg-primary: #0a0f1c;
+            --bg-secondary: #111827;
+            --bg-card: #1a1f2e;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --accent-cyan: #00ffcc;
+            --accent-magenta: #ff00aa;
+            --accent-blue: #4361ee;
+            --accent-orange: #ff6b35;
+            --accent-green: #00ff88;
+            --accent-red: #ff4757;
+
+            /* Glow effects */
+            --glow-cyan: 0 0 20px rgba(0, 255, 204, 0.4);
+            --glow-magenta: 0 0 20px rgba(255, 0, 170, 0.4);
+
+            /* Typography */
+            --font-display: 'Clash Display', sans-serif;
+            --font-body: 'Satoshi', sans-serif;
+            --title-size: clamp(2rem, 6vw, 4.5rem);
+            --h2-size: clamp(1.5rem, 4vw, 3rem);
+            --h3-size: clamp(1.1rem, 2.5vw, 1.75rem);
+            --body-size: clamp(0.8rem, 1.5vw, 1.1rem);
+            --code-size: clamp(0.65rem, 1.2vw, 0.9rem);
+            --small-size: clamp(0.6rem, 1vw, 0.8rem);
+
+            /* Spacing */
+            --slide-padding: clamp(1.5rem, 5vw, 5rem);
+            --content-gap: clamp(1rem, 2.5vw, 2rem);
+            --element-gap: clamp(0.5rem, 1.5vw, 1rem);
+
+            /* Animation */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --duration-normal: 0.6s;
+            --duration-slow: 1s;
+        }
+
+        /* ===========================================
+           BASE STYLES
+           =========================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ===========================================
+           SLIDE BASE (viewport-base.css)
+           =========================================== */
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+
+        /* ===========================================
+           BACKGROUNDS & ATMOSPHERE
+           =========================================== */
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        .bg-gradient {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 0% 0%, rgba(67, 97, 238, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(255, 0, 170, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0, 255, 204, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .bg-noise {
+            position: absolute;
+            inset: 0;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* ===========================================
+           TYPOGRAPHY
+           =========================================== */
+        h1 {
+            font-family: var(--font-display);
+            font-size: var(--title-size);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            font-size: var(--h2-size);
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: var(--content-gap);
+        }
+
+        h3 {
+            font-family: var(--font-display);
+            font-size: var(--h3-size);
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        p, li {
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .text-cyan { color: var(--accent-cyan); }
+        .text-magenta { color: var(--accent-magenta); }
+        .text-orange { color: var(--accent-orange); }
+        .text-green { color: var(--accent-green); }
+        .text-red { color: var(--accent-red); }
+
+        /* ===========================================
+           CODE BLOCKS
+           =========================================== */
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            border-radius: 12px;
+            padding: clamp(0.75rem, 2vw, 1.5rem);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: var(--code-size);
+            line-height: 1.7;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+            border-radius: 12px 12px 0 0;
+        }
+
+        .code-comment { color: #6b7280; }
+        .code-error { color: var(--accent-red); background: rgba(255, 71, 87, 0.1); padding: 0 4px; border-radius: 3px; }
+        .code-keyword { color: var(--accent-magenta); }
+        .code-string { color: var(--accent-green); }
+        .code-type { color: var(--accent-cyan); }
+        .code-member { color: var(--accent-orange); }
+
+        /* ===========================================
+           CARDS & CONTAINERS
+           =========================================== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 255, 204, 0.15);
+            border-radius: 16px;
+            padding: clamp(1rem, 2.5vw, 1.5rem);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-glow {
+            box-shadow: var(--glow-cyan), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.5), transparent);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: var(--small-size);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-cyan {
+            background: rgba(0, 255, 204, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+        }
+
+        .badge-red {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .badge-green {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .badge-orange {
+            background: rgba(255, 107, 53, 0.15);
+            color: var(--accent-orange);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        /* ===========================================
+           LISTS
+           =========================================== */
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: var(--element-gap);
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+        }
+
+        .feature-list li::before {
+            content: '→';
+            color: var(--accent-cyan);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .feature-list li.error-item::before {
+            content: '✗';
+            color: var(--accent-red);
+        }
+
+        /* ===========================================
+           LAYOUT UTILITIES
+           =========================================== */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-sm { gap: var(--element-gap); }
+        .gap-md { gap: var(--content-gap); }
+        .gap-lg { gap: calc(var(--content-gap) * 1.5); }
+        .text-center { text-align: center; }
+        .max-w-900 { max-width: 900px; }
+        .max-w-1100 { max-width: 1100px; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+
+        /* ===========================================
+           GRID SYSTEMS
+           =========================================== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--content-gap);
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--content-gap);
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        /* ===========================================
+           SLIDE NUMBER
+           =========================================== */
+        .slide-number {
+            position: absolute;
+            bottom: clamp(1rem, 3vw, 2rem);
+            right: clamp(1rem, 3vw, 2rem);
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            color: rgba(0, 255, 204, 0.08);
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        /* ===========================================
+           NAVIGATION DOTS
+           =========================================== */
+        .nav-dots {
+            position: fixed;
+            right: clamp(1rem, 2vw, 1.5rem);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.2);
+        }
+
+        .nav-dot.active {
+            background: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        /* ===========================================
+           PROGRESS BAR
+           =========================================== */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+            z-index: 1000;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* ===========================================
+           ANIMATIONS
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal:nth-child(1) { transition-delay: 0.1s; }
+        .reveal:nth-child(2) { transition-delay: 0.2s; }
+        .reveal:nth-child(3) { transition-delay: 0.3s; }
+        .reveal:nth-child(4) { transition-delay: 0.4s; }
+        .reveal:nth-child(5) { transition-delay: 0.5s; }
+        .reveal:nth-child(6) { transition-delay: 0.6s; }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal-scale {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal-left {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Neon glow pulse */
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: var(--glow-cyan); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 204, 0.6); }
+        }
+
+        .glow-pulse {
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        /* Float animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* ===========================================
+           TITLE SLIDE
+           =========================================== */
+        .title-slide {
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(67, 97, 238, 0.25) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(255, 0, 170, 0.2) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+
+        .title-slide .logo {
+            width: clamp(60px, 10vw, 100px);
+            height: clamp(60px, 10vw, 100px);
+            margin-bottom: var(--content-gap);
+        }
+
+        .title-slide h1 {
+            margin-bottom: var(--element-gap);
+        }
+
+        .title-slide .subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--text-secondary);
+            margin-bottom: var(--content-gap);
+        }
+
+        .title-slide .tagline {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* ===========================================
+           CONTENT SLIDES
+           =========================================== */
+        .content-slide h2 .accent {
+            color: var(--accent-cyan);
+        }
+
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: var(--element-gap);
+        }
+
+        .section-label::before {
+            content: '';
+            width: 30px;
+            height: 2px;
+            background: var(--accent-cyan);
+        }
+
+        /* ===========================================
+           IMAGE COMPARISON (Hover zoom)
+           =========================================== */
+        .image-pair {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--content-gap);
+            margin-top: var(--content-gap);
+        }
+
+        .image-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 0, 170, 0.3);
+            cursor: pointer;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            max-height: min(40vh, 350px);
+            object-fit: contain;
+            transition: transform 0.4s var(--ease-out-expo);
+            display: block;
+        }
+
+        .image-container:hover img {
+            transform: scale(1.1);
+        }
+
+        .image-container .label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+        }
+
+        .image-container .label .badge {
+            margin-bottom: 6px;
+        }
+
+        /* ===========================================
+           STRATEGY TAG
+           =========================================== */
+        .strategy-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: var(--small-size);
+            font-weight: 600;
+            margin-top: var(--content-gap);
+        }
+
+        .strategy-dont {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px dashed rgba(255, 71, 87, 0.4);
+            color: var(--accent-red);
+        }
+
+        .strategy-do {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px dashed rgba(0, 255, 136, 0.4);
+            color: var(--accent-green);
+        }
+
+        /* ===========================================
+           CODE EXAMPLE CARDS
+           =========================================== */
+        .code-example {
+            margin-top: var(--content-gap);
+        }
+
+        .code-example .title {
+            font-size: var(--small-size);
+            color: var(--accent-cyan);
+            margin-bottom: var(--element-gap);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .inline-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--accent-cyan);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* ===========================================
+           API QUERY EXAMPLE
+           =========================================== */
+        .query-demo {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 12px;
+            padding: clamp(0.75rem, 2vw, 1.25rem);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: var(--code-size);
+        }
+
+        .query-demo .prompt {
+            color: var(--accent-magenta);
+            margin-bottom: 8px;
+        }
+
+        .query-demo .prompt::before {
+            content: '$ ';
+            color: var(--accent-cyan);
+        }
+
+        .query-demo .result {
+            color: var(--accent-green);
+            margin-top: 8px;
+        }
+
+        .query-demo .result .ok::before {
+            content: '[✓] ';
+            color: var(--accent-green);
+        }
+
+        .query-demo .result .member {
+            color: var(--text-secondary);
+            padding-left: 20px;
+        }
+
+        .query-demo .result .member::before {
+            content: '→ ';
+            color: var(--accent-cyan);
+        }
+
+        /* ===========================================
+           HDC COMMAND GRID
+           =========================================== */
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--content-gap);
+            margin-top: var(--content-gap);
+        }
+
+        .command-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 255, 204, 0.15);
+            border-radius: 12px;
+            padding: clamp(0.75rem, 2vw, 1.25rem);
+        }
+
+        .command-card h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: var(--code-size);
+            color: var(--accent-cyan);
+            margin-bottom: 6px;
+        }
+
+        .command-card p {
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+        }
+
+        /* ===========================================
+           SUMMARY GRID
+           =========================================== */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--content-gap);
+            margin-top: var(--content-gap);
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 255, 204, 0.15);
+        }
+
+        .summary-item .icon {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            margin-bottom: var(--element-gap);
+        }
+
+        .summary-item h4 {
+            font-family: var(--font-display);
+            font-size: var(--h3-size);
+            margin-bottom: 6px;
+        }
+
+        .summary-item p {
+            font-size: var(--small-size);
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===========================================
+           RESPONSIVE
+           =========================================== */
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(1rem, 3vw, 2rem);
+                --content-gap: clamp(0.5rem, 1.5vw, 1rem);
+            }
+        }
+
+        @media (max-height: 600px) {
+            :root {
+                --title-size: clamp(1.5rem, 4vw, 2.5rem);
+                --h2-size: clamp(1.2rem, 3vw, 2rem);
+            }
+            .nav-dots { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Navigation Dots -->
+    <nav class="nav-dots" id="navDots"></nav>
+
+    <!-- ===========================================
+         SLIDE 1: TITLE
+         =========================================== -->
+    <section class="slide title-slide" data-slide="1">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="bg-noise"></div>
+        <div class="slide-content text-center">
+            <!-- HarmonyOS Icon SVG -->
+            <svg class="logo reveal" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" stroke="url(#grad1)" stroke-width="3" fill="none"/>
+                <path d="M50 15 L50 85 M15 50 L85 50" stroke="url(#grad1)" stroke-width="2"/>
+                <circle cx="50" cy="50" r="20" fill="url(#grad1)" opacity="0.3"/>
+                <circle cx="50" cy="50" r="8" fill="url(#grad1)"/>
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#00ffcc"/>
+                        <stop offset="100%" style="stop-color:#ff00aa"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <h1 class="reveal"><span class="text-gradient">HarmonyOS</span><br>应用开发技能</h1>
+            <p class="subtitle reveal">让大模型真正理解鸿蒙生态</p>
+            <div class="tagline reveal">
+                <span class="badge badge-cyan">ArkTS</span>
+                <span class="badge badge-cyan">ArkUI</span>
+                <span class="badge badge-cyan">SDK</span>
+                <span class="badge badge-orange">HDC</span>
+            </div>
+        </div>
+        <div class="slide-number">01</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 2: BACKGROUND
+         =========================================== -->
+    <section class="slide" data-slide="2">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 背景
+            </div>
+            <h2 class="reveal"><span class="accent">现状</span>：大模型对鸿蒙支持有限</h2>
+
+            <div class="grid-2 reveal" style="margin-top: var(--content-gap);">
+                <div class="card card-glow">
+                    <span class="badge badge-red">API 变更剧烈</span>
+                    <p style="margin-top: var(--element-gap);">
+                        HarmonyOS SDK API 处于快速迭代期，版本间差异显著。大模型训练数据易过时，容易生成已废弃或不存在的 API 调用。
+                    </p>
+                </div>
+                <div class="card card-glow">
+                    <span class="badge badge-red">代码质量堪忧</span>
+                    <p style="margin-top: var(--element-gap);">
+                        极端场景下，生成的代码无法自动恢复。类型错误、成员名错误、模块路径错误频发，需要大量人工介入。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Image placeholders for problematic code -->
+            <div class="image-pair reveal">
+                <div class="image-container">
+                    <!-- Replace with actual screenshot 1 -->
+                    <div style="background: #1a1a2e; min-height: 200px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: var(--small-size);">
+                        <span class="badge badge-red">问题截图 1</span>
+                    </div>
+                    <div class="label">
+                        <span class="badge badge-red">编译错误</span><br>
+                        <span style="color: var(--text-secondary);">Property 'captureSnapshot' does not exist</span>
+                    </div>
+                </div>
+                <div class="image-container">
+                    <!-- Replace with actual screenshot 2 -->
+                    <div style="background: #1a1a2e; min-height: 200px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: var(--small-size);">
+                        <span class="badge badge-red">问题截图 2</span>
+                    </div>
+                    <div class="label">
+                        <span class="badge badge-red">API 不存在</span><br>
+                        <span style="color: var(--text-secondary);">Module '@ohos.app.ability' not found</span>
+                    </div>
+                </div>
+            </div>
+            <p class="reveal" style="margin-top: var(--element-gap); font-size: var(--small-size); color: var(--text-secondary); text-align: center;">
+                鼠标悬停放大 · 请替换为实际编译错误截图
+            </p>
+        </div>
+        <div class="slide-number">02</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 3: CLASSIFICATION OVERVIEW
+         =========================================== -->
+    <section class="slide" data-slide="3">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 分类分析
+            </div>
+            <h2 class="reveal"><span class="accent">New</span> in HarmonyOS<br>App Development</h2>
+            <p class="reveal" style="font-size: var(--body-size); color: var(--text-secondary); max-width: 700px; margin-bottom: var(--content-gap);">
+                对一个经验丰富的前端工程师而言，哪些知识是新的，需要学习才能进行开发？
+            </p>
+
+            <div class="grid-3 reveal">
+                <div class="card" style="border-left: 3px solid var(--accent-orange);">
+                    <span class="badge badge-orange">工程模板</span>
+                    <p style="margin-top: var(--element-gap); font-size: var(--small-size);">IDE 自带，变化剧烈</p>
+                    <span class="strategy-tag strategy-dont">✗ 不解决</span>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-cyan);">
+                    <span class="badge badge-cyan">ArkTS 语法</span>
+                    <p style="margin-top: var(--element-gap); font-size: var(--small-size);">类型系统差异</p>
+                    <span class="strategy-tag strategy-do">✓ 编译告警修复</span>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-magenta);">
+                    <span class="badge badge-cyan">ArkUI 组件</span>
+                    <p style="margin-top: var(--element-gap); font-size: var(--small-size);">DSL 语法</p>
+                    <span class="strategy-tag strategy-do">✓ 编译告警修复</span>
+                </div>
+            </div>
+
+            <div class="grid-2 reveal" style="margin-top: var(--content-gap);">
+                <div class="card" style="border-left: 3px solid var(--accent-red);">
+                    <span class="badge badge-red">特有 API</span>
+                    <p style="margin-top: var(--element-gap); font-size: var(--small-size);">幻觉重灾区</p>
+                    <span class="strategy-tag strategy-do">✓ SDK 索引查询</span>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-green);">
+                    <span class="badge badge-green">HDC 工具</span>
+                    <p style="margin-top: var(--element-gap); font-size: var(--small-size);">设备调试</p>
+                    <span class="strategy-tag strategy-do">✓ 命令速查表</span>
+                </div>
+            </div>
+        </div>
+        <div class="slide-number">03</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 4: ENGINEERING TEMPLATES
+         =========================================== -->
+    <section class="slide" data-slide="4">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 01
+            </div>
+            <h2 class="reveal">工程模板</h2>
+
+            <div class="max-w-900 mx-auto">
+                <div class="card card-glow reveal" style="text-align: center; padding: clamp(2rem, 5vw, 4rem);">
+                    <h3 style="color: var(--accent-orange); margin-bottom: var(--element-gap);">IDE 自带功能 · 变化剧烈</h3>
+                    <p style="font-size: var(--body-size); color: var(--text-secondary); max-width: 600px; margin: 0 auto var(--content-gap);">
+                        小众场景，性价比低。通过 IDE 自动创建或参考其他模块文件结构通常可自动解决。
+                    </p>
+                    <div class="strategy-tag strategy-dont" style="font-size: var(--body-size);">
+                        <span style="font-size: 1.5em;">✗</span>
+                        <span>策略：不解决</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-number">04</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 5: ArkTS SYNTAX
+         =========================================== -->
+    <section class="slide" data-slide="5">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 02
+            </div>
+            <h2 class="reveal">ArkTS <span class="accent">语法差异</span></h2>
+            <p class="reveal" style="font-size: var(--body-size); color: var(--text-secondary); margin-bottom: var(--content-gap);">
+                大模型已经知道这些差异。通过编译告警可以直接修复。
+            </p>
+
+            <div class="grid-3 reveal">
+                <div class="card">
+                    <span class="badge badge-cyan">严格类型</span>
+                    <p style="margin-top: var(--element-gap); font-size: var(--small-size);">
+                        禁用 <span class="inline-code">any</span>，禁止动态类型
+                    </p>
+                </div>
+                <div class="card">
+                    <span class="badge badge-cyan">不可变更新</span>
+                    <p style="margin-top: var(--element-gap); font-size: var(--small-size);">
+                        状态修改必须创建新对象
+                    </p>
+                </div>
+                <div class="card">
+                    <span class="badge badge-cyan">完整标注</span>
+                    <p style="margin-top: var(--element-gap); font-size: var(--small-size);">
+                        显式声明所有类型
+                    </p>
+                </div>
+            </div>
+
+            <div class="code-block reveal" style="margin-top: var(--content-gap);">
+<span class="code-comment">// TypeScript 特性在 ArkTS 中不允许</span>
+
+<span class="code-error">let data: any;</span>                    <span class="code-comment">// ✗ 错误！禁用 any 类型</span>
+
+<span class="code-keyword">let</span> value: unknown;
+(value <span class="code-keyword">as</span> string).length;        <span class="code-comment">// ✗ 错误！unknown 断言</span>
+
+<span class="code-keyword">let</span> obj = {};
+obj[<span class="code-string">'key'</span>] = value;           <span class="code-comment">// ✗ 错误！动态属性访问</span>
+
+<span class="code-keyword">class</span> <span class="code-type">A</span> { x: <span class="code-type">number</span> = 0; }
+<span class="code-keyword">class</span> <span class="code-type">B</span> { x: <span class="code-type">number</span> = 0; }
+<span class="code-keyword">let</span> a: <span class="code-type">A</span> = <span class="code-keyword">new</span> <span class="code-type">B</span>();        <span class="code-comment">// ✗ 错误！结构化类型</span>
+
+<span class="code-keyword">type</span> <span class="code-type">T</span> = <span class="code-keyword">typeof</span> someVar;       <span class="code-comment">// ✗ 错误！typeof 用于类型</span>
+<span class="code-keyword">type</span> <span class="code-type">K</span> = <span class="code-keyword">keyof</span> SomeType;     <span class="code-comment">// ✗ 错误！keyof 操作符</span>
+            </div>
+
+            <div class="strategy-tag strategy-do reveal" style="margin-top: var(--content-gap);">
+                <span>✓</span>
+                <span>策略：提供少样本示例，主要通过编译错误指导解决</span>
+            </div>
+        </div>
+        <div class="slide-number">05</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 6: ArkUI COMPONENT SYNTAX
+         =========================================== -->
+    <section class="slide" data-slide="6">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 03
+            </div>
+            <h2 class="reveal">ArkUI <span class="accent">组件语法</span></h2>
+            <p class="reveal" style="font-size: var(--body-size); color: var(--text-secondary); margin-bottom: var(--content-gap);">
+                ArkUI 组件语法是一套 <span class="text-cyan">DSL</span>，和 ArkTS 完全是两套语法。大部分时候可以正常生成。
+            </p>
+
+            <div class="code-block reveal">
+<span class="code-keyword">@Component</span>
+<span class="code-keyword">struct</span> <span class="code-type">AnimatedButton</span> {
+    <span class="code-member">@State</span> scale: <span class="code-type">number</span> = 1;
+    <span class="code-member">@State</span> opacity: <span class="code-type">number</span> = 1;
+
+    <span class="code-keyword">build</span>() {
+        <span class="code-type">Button</span>(<span class="code-string">'Animated'</span>)
+            .scale({ x: <span class="code-keyword">this</span>.scale, y: <span class="code-keyword">this</span>.scale })
+            .opacity(<span class="code-keyword">this</span>.opacity)
+            .animation({ duration: 300, curve: <span class="code-type">Curve</span>.EaseInOut })
+            .onTouch((event: <span class="code-type">TouchEvent</span>) => {
+                <span class="code-keyword">if</span> (event.type === <span class="code-type">TouchType</span>.Down) {
+                    <span class="code-keyword">this</span>.scale = 0.95;
+                    <span class="code-keyword">this</span>.opacity = 0.8;
+                } <span class="code-keyword">else if</span> (event.type === <span class="code-type">TouchType</span>.Up) {
+                    <span class="code-keyword">this</span>.scale = 1;
+                    <span class="code-keyword">this</span>.opacity = 1;
+                }
+            })
+    }
+}
+            </div>
+
+            <div class="strategy-tag strategy-do reveal" style="margin-top: var(--content-gap);">
+                <span>✓</span>
+                <span>策略：提供少样本示例，主要通过编译错误指导解决</span>
+            </div>
+        </div>
+        <div class="slide-number">06</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 7: HarmonyOS API - PROBLEM
+         =========================================== -->
+    <section class="slide" data-slide="7">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 04
+            </div>
+            <h2 class="reveal">鸿蒙 <span class="text-red">特有 API</span></h2>
+
+            <div class="max-w-900 mx-auto">
+                <div class="card reveal" style="text-align: center; padding: clamp(1.5rem, 4vw, 3rem); border-color: rgba(255, 71, 87, 0.3);">
+                    <span class="badge badge-red glow-pulse">幻觉重灾区</span>
+                    <h3 style="margin: var(--content-gap) 0 var(--element-gap); color: var(--text-primary);">
+                        要么编造不存在的 API
+                    </h3>
+                    <h3 style="color: var(--text-primary);">
+                        要么使用已废弃的旧 API
+                    </h3>
+                    <p style="margin-top: var(--content-gap); font-size: var(--body-size); color: var(--text-secondary);">
+                        400+ 模块、3000+ 类、数万+ 成员方法<br>
+                        大模型难以准确记忆
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid-2 reveal" style="margin-top: var(--content-gap);">
+                <div class="card">
+                    <span class="badge badge-red">✗ 幻觉</span>
+                    <div class="code-block" style="margin-top: var(--element-gap); padding: 0.75rem;">
+<span class="code-comment">// 大模型可能生成：</span>
+controller.<span class="code-error">captureSnapshot</span>()
+<span class="code-comment">// 实际不存在此方法</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <span class="badge badge-orange">✗ 旧 API</span>
+                    <div class="code-block" style="margin-top: var(--element-gap); padding: 0.75rem;">
+<span class="code-comment">// 已废弃的写法：</span>
+<span class="code-keyword">import</span> web from <span class="code-string">'@ohos.web.webview'</span>
+<span class="code-comment">// 新 API 应使用 @kit.ArkWeb</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-number">07</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 8: HarmonyOS API - SOLUTION
+         =========================================== -->
+    <section class="slide" data-slide="8">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 04
+            </div>
+            <h2 class="reveal">SDK <span class="accent">索引方案</span></h2>
+            <p class="reveal" style="font-size: var(--body-size); color: var(--text-secondary); margin-bottom: var(--content-gap);">
+                轻量 SDK 索引（索引耗时 &lt;1s），提供 API 的实时查询，相当于接入了一个 SDK 知识库。
+            </p>
+
+            <div class="grid-2 reveal">
+                <div class="card card-glow">
+                    <h3 style="color: var(--accent-cyan); margin-bottom: var(--element-gap);">工作原理</h3>
+                    <ol style="list-style: none; font-size: var(--small-size); color: var(--text-secondary);">
+                        <li style="margin-bottom: 8px;"><span class="text-cyan">1.</span> 扫描 SDK 的 .d.ts 类型定义文件</li>
+                        <li style="margin-bottom: 8px;"><span class="text-cyan">2.</span> 解析模块路径、类成员、方法签名</li>
+                        <li style="margin-bottom: 8px;"><span class="text-cyan">3.</span> 构建可查询的索引数据库</li>
+                        <li><span class="text-cyan">4.</span> 提供命令行查询接口</li>
+                    </ol>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--accent-cyan); margin-bottom: var(--element-gap);">索引范围</h3>
+                    <ul style="list-style: none; font-size: var(--small-size); color: var(--text-secondary);">
+                        <li style="margin-bottom: 6px;">• <span class="inline-code">@ohos.*</span> — 系统 API</li>
+                        <li style="margin-bottom: 6px;">• <span class="inline-code">@kit.*</span> — ArkUI 套件</li>
+                        <li style="margin-bottom: 6px;">• <span class="inline-code">@system.*</span> — 系统能力</li>
+                        <li>• <span class="inline-code">@hms.*</span> — HMS 套件</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="query-demo reveal" style="margin-top: var(--content-gap);">
+                <div class="prompt">python check_sdk_imports.py --query "WebviewController"</div>
+                <div class="result">
+<span class="ok">@ohos.web.webview.webview.WebviewController</span>
+<span class="ok">@kit.ArkWeb.webview.WebviewController</span>
+                </div>
+            </div>
+
+            <div class="strategy-tag strategy-do reveal" style="margin-top: var(--content-gap);">
+                <span>✓</span>
+                <span>策略：轻量 SDK 索引 + 实时 API 查询 + 智能纠错推荐</span>
+            </div>
+        </div>
+        <div class="slide-number">08</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 9: HarmonyOS API - EFFECT
+         =========================================== -->
+    <section class="slide" data-slide="9">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 04
+            </div>
+            <h2 class="reveal">查询 <span class="accent">效果演示</span></h2>
+
+            <div class="grid-2 reveal" style="gap: var(--content-gap);">
+                <div>
+                    <h3 style="color: var(--text-secondary); font-size: var(--body-size); margin-bottom: var(--element-gap);">查询类的所有成员</h3>
+                    <div class="query-demo">
+                        <div class="prompt">python check_sdk_imports.py --query "@ohos.web.webview.webview.WebviewController"</div>
+                        <div class="result">
+<span class="ok">WebviewController [ets/api/@ohos.web.webview.d.ts:3579]</span>
+<span class="member">constructor</span>
+<span class="member">initializeWebEngine</span>
+<span class="member">setActiveWebEngineVersion</span>
+<span class="member">getActiveWebEngineVersion</span>
+<span class="member">setHttpDns</span>
+<span class="member">setWebDebuggingAccess</span>
+<span class="member">forward</span>
+<span class="member">backward</span>
+<span class="member">clearHistory</span>
+<span class="member">...</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: var(--text-secondary); font-size: var(--body-size); margin-bottom: var(--element-gap);">智能纠错推荐</h3>
+                    <div class="query-demo">
+                        <div class="prompt">python check_sdk_imports.py --query "WebviewController#captureSnapshot"</div>
+                        <div class="result" style="color: var(--accent-red);">
+<span class="ok" style="color: var(--accent-red);">[✗] WebviewController#captureSnapshot</span>
+<span style="color: var(--text-secondary);">member 'captureSnapshot' not found</span>
+<span style="color: var(--accent-green);">Did you mean:</span>
+<span class="member">webPageSnapshot</span>
+<span class="member">snapshot</span>
+<span class="member">getBitmap</span>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: var(--content-gap); border-color: rgba(0, 255, 136, 0.3);">
+                        <span class="badge badge-green">✓ 自动纠错</span>
+                        <p style="margin-top: var(--element-gap); font-size: var(--small-size);">
+                            Levenshtein 编辑距离 + 前缀匹配 + 语义上下文<br>
+                            综合相关度排序推荐
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-number">09</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 10: HDC TOOLS
+         =========================================== -->
+    <section class="slide" data-slide="10">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 05
+            </div>
+            <h2 class="reveal">HDC <span class="accent">开发者工具</span></h2>
+            <p class="reveal" style="font-size: var(--body-size); color: var(--text-secondary); margin-bottom: var(--content-gap);">
+                轻量自动化验证的基石。辅助自动化验证（编译后安装、分析 crash 等）。目前大模型基本不具备相关知识。
+            </p>
+
+            <div class="command-grid reveal">
+                <div class="command-card">
+                    <h4>hdc shell</h4>
+                    <p>进入设备 shell</p>
+                </div>
+                <div class="command-card">
+                    <h4>hdc install app.hap</h4>
+                    <p>安装应用包</p>
+                </div>
+                <div class="command-card">
+                    <h4>hdc file send local remote</h4>
+                    <p>推送文件到设备</p>
+                </div>
+                <div class="command-card">
+                    <h4>hdc shell bm dump -a</h4>
+                    <p>查看已安装应用</p>
+                </div>
+                <div class="command-card">
+                    <h4>hdc shell pidof com.example</h4>
+                    <p>获取进程 PID</p>
+                </div>
+                <div class="command-card">
+                    <h4>hdc shell hilog -r</h4>
+                    <p>查看实时日志</p>
+                </div>
+            </div>
+
+            <div class="strategy-tag strategy-do reveal" style="margin-top: var(--content-gap);">
+                <span>✓</span>
+                <span>策略：提供常用命令，作为知识库的补充</span>
+            </div>
+        </div>
+        <div class="slide-number">10</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 11: SUMMARY
+         =========================================== -->
+    <section class="slide" data-slide="11">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content text-center">
+            <div class="section-label reveal" style="justify-content: center;">
+                <span class="text-magenta">//</span> 总结
+            </div>
+            <h2 class="reveal" style="margin-bottom: var(--content-gap);">HarmonyOS <span class="text-gradient">技能体系</span></h2>
+
+            <div class="summary-grid reveal">
+                <div class="summary-item">
+                    <div class="icon">🏗️</div>
+                    <h4 class="text-orange">工程模板</h4>
+                    <p>IDE 自动处理</p>
+                </div>
+                <div class="summary-item">
+                    <div class="icon">📝</div>
+                    <h4 class="text-cyan">ArkTS 语法</h4>
+                    <p>编译告警驱动</p>
+                </div>
+                <div class="summary-item">
+                    <div class="icon">🎨</div>
+                    <h4 class="text-cyan">ArkUI 组件</h4>
+                    <p>编译告警驱动</p>
+                </div>
+                <div class="summary-item">
+                    <div class="icon">🔍</div>
+                    <h4 class="text-red">特有 API</h4>
+                    <p>SDK 索引查询</p>
+                </div>
+                <div class="summary-item">
+                    <div class="icon">🔧</div>
+                    <h4 class="text-green">HDC 工具</h4>
+                    <p>命令速查</p>
+                </div>
+                <div class="summary-item">
+                    <div class="icon">🤖</div>
+                    <h4 class="text-magenta">目标</h4>
+                    <p>大模型自动修复</p>
+                </div>
+            </div>
+
+            <p class="reveal" style="margin-top: var(--content-gap); font-size: var(--h3-size); color: var(--text-secondary);">
+                让大模型真正理解鸿蒙生态
+            </p>
+        </div>
+        <div class="slide-number">11</div>
+    </section>
+
+    <!-- ===========================================
+         JAVASCRIPT
+         =========================================== -->
+    <script>
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.totalSlides = this.slides.length;
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupProgressBar();
+                this.setupNavDots();
+            }
+
+            setupIntersectionObserver() {
+                const options = {
+                    root: null,
+                    rootMargin: '0px',
+                    threshold: 0.5
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            const slideIndex = parseInt(entry.target.dataset.slide) - 1;
+                            this.currentSlide = slideIndex;
+                            this.updateProgress();
+                            this.updateNavDots();
+                        }
+                    });
+                }, options);
+
+                this.slides.forEach(slide => observer.observe(slide));
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'ArrowDown':
+                        case 'ArrowRight':
+                        case ' ':
+                        case 'PageDown':
+                            e.preventDefault();
+                            this.goToSlide(Math.min(this.currentSlide + 1, this.totalSlides - 1));
+                            break;
+                        case 'ArrowUp':
+                        case 'ArrowLeft':
+                        case 'PageUp':
+                            e.preventDefault();
+                            this.goToSlide(Math.max(this.currentSlide - 1, 0));
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.goToSlide(0);
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.goToSlide(this.totalSlides - 1);
+                            break;
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                let touchStartY = 0;
+                let touchEndY = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    touchStartY = e.changedTouches[0].screenY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    touchEndY = e.changedTouches[0].screenY;
+                    const diff = touchStartY - touchEndY;
+
+                    if (Math.abs(diff) > 50) {
+                        if (diff > 0) {
+                            this.goToSlide(Math.min(this.currentSlide + 1, this.totalSlides - 1));
+                        } else {
+                            this.goToSlide(Math.max(this.currentSlide - 1, 0));
+                        }
+                    }
+                }, { passive: true });
+            }
+
+            setupProgressBar() {
+                this.progressBar = document.getElementById('progressBar');
+            }
+
+            updateProgress() {
+                const progress = ((this.currentSlide + 1) / this.totalSlides) * 100;
+                this.progressBar.style.width = `${progress}%`;
+            }
+
+            setupNavDots() {
+                this.navDots = document.getElementById('navDots');
+                this.slides.forEach((_, index) => {
+                    const dot = document.createElement('div');
+                    dot.className = 'nav-dot';
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                    this.navDots.appendChild(dot);
+                });
+                this.updateNavDots();
+            }
+
+            updateNavDots() {
+                const dots = this.navDots.querySelectorAll('.nav-dot');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+
+            goToSlide(index) {
+                this.slides[index].scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new SlidePresentation();
+        });
+    </script>
+</body>
+</html>
