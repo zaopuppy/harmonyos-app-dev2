@@ -1,0 +1,23 @@
+{
+  "skill_name": "harmony-api",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我这边编译报错：`Property 'captureSnapshot' does not exist on type 'WebviewController'`，文件在 `E:/workspace/arktsapi/entry/src/main/ets/pages/Index.ets:123:31`。请帮我用 harmony-api skill 定位正确的 API 名称，如果需要的话告诉我应该去哪个 SDK 定义文件里看精确签名。",
+      "expected_output": "先查询 `WebviewController` 的完整类型路径，明确优先使用 `@ohos.web.webview.webview.WebviewController` 这种类路径而不是 `#` 形式的 namespace 成员路径；再列出成员并定位到 `webPageSnapshot`；最后指出可去 `@ohos.web.webview.d.ts` 查看精确签名。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "ArkTS Compiler Error: `Property 'reload' does not exist on type 'WebviewController'`。不要只给我猜测答案，请按照 skill 里的查询流程一步步告诉我怎么确认正确成员和签名。",
+      "expected_output": "明确采用“类型路径 -> 成员列表 -> .d.ts 签名”的排查流程，先查 `WebviewController`，再查完整类路径下的成员，并说明如何根据输出中的文件路径和行号去 SDK 定义文件确认方法签名。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我不确定 `WebviewController` 到底应该用 `@ohos` 还是 `@kit.ArkWeb` 的路径，编译器提示某个方法不存在。请用 skill 教我先查完整类型路径，再决定后续应该查哪个成员列表。",
+      "expected_output": "先用关键字查询 `WebviewController`，展示 `@ohos` 与 `@kit` 两条候选路径，并明确要根据用户代码中的 import 来源选择后续查询目标；随后建议用选中的完整类型路径继续列成员并在需要时查 `.d.ts`。",
+      "files": []
+    }
+  ]
+}
