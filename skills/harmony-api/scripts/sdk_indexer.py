@@ -26,6 +26,7 @@ class ClassInfo:
     members: list      # 方法名 + 属性名列表
     statics: list       # 静态成员列表
     export_type: str    # "default" 或 "named"
+    line_number: int = 0  # Line number where this class is defined
 
 
 @dataclass
@@ -35,6 +36,7 @@ class NestedClass:
     class_name: str        # 'WebviewController'
     members: list
     statics: list
+    line_number: int = 0   # Line number where nested class is defined
 
 
 @dataclass
@@ -142,16 +144,23 @@ class SDKIndexer:
         def extract_members(body: str) -> list:
             """Extract member names from a class or namespace body."""
             members = []
-            depth = 0
+            paren_depth = 0
+            brace_depth = 0
             current = []
             for char in body:
                 if char == '(':
-                    depth += 1
+                    paren_depth += 1
                     current.append(char)
                 elif char == ')':
-                    depth -= 1
+                    paren_depth -= 1
                     current.append(char)
-                elif char == ';' and depth == 0:
+                elif char == '{':
+                    brace_depth += 1
+                    current.append(char)
+                elif char == '}':
+                    brace_depth -= 1
+                    current.append(char)
+                elif char == ';' and paren_depth == 0 and brace_depth == 0:
                     decl = ''.join(current).strip()
                     current = []
                     if not decl:
@@ -182,6 +191,10 @@ class SDKIndexer:
                     current.append(char)
             return members
 
+        def pos_to_line(content: str, pos: int) -> int:
+            """Convert byte/char position to line number (1-based)."""
+            return content[:pos].count('\n') + 1
+
         # Process: export default class Foo { }
         for match in re.finditer(r'export\s+default\s+class\s+(\w+)\s*\{', clean_content):
             class_name = match.group(1)
@@ -190,7 +203,8 @@ class SDKIndexer:
                 classes[class_name] = ClassInfo(
                     members=extract_members(body),
                     statics=[],
-                    export_type="default"
+                    export_type="default",
+                    line_number=pos_to_line(content, match.start())
                 )
 
         # Process: export class Foo { }
@@ -203,7 +217,8 @@ class SDKIndexer:
                 classes[class_name] = ClassInfo(
                     members=extract_members(body),
                     statics=[],
-                    export_type="named"
+                    export_type="named",
+                    line_number=pos_to_line(content, match.start())
                 )
 
         # Process: export namespace Foo { }, declare namespace Foo { }, or namespace Foo { }
@@ -223,18 +238,28 @@ class SDKIndexer:
                     class_body, _ = extract_body(body, class_body_start)
                     if class_body is not None:
                         nested_members = extract_members(class_body)
+                        # Find line number in original content by searching for the class declaration
+                        class_search = f'class {nested_class_name}'
+                        class_pos_in_original = content.find(class_search)
+                        nested_line = content[:class_pos_in_original].count('\n') + 1 if class_pos_in_original >= 0 else 0
                         nested_classes.append(NestedClass(
                             parent_module=self._get_module_name_from_filepath(filepath),
                             namespace=ns_name,
                             class_name=nested_class_name,
                             members=nested_members,
-                            statics=[]
+                            statics=[],
+                            line_number=nested_line
                         ))
                 if ns_members:
+                    # Find line number in original content by searching for the namespace declaration
+                    ns_search = f'namespace {ns_name}'
+                    ns_pos_in_original = content.find(ns_search)
+                    ns_line = content[:ns_pos_in_original].count('\n') + 1 if ns_pos_in_original >= 0 else 0
                     classes[ns_name] = ClassInfo(
                         members=ns_members,
                         statics=[],
-                        export_type="namespace"
+                        export_type="namespace",
+                        line_number=ns_line
                     )
 
         # If no classes/namespaces found, check if this is a barrel file (re-export module)
@@ -351,7 +376,8 @@ class SDKIndexer:
                 classes={nc.class_name: ClassInfo(
                     members=nc.members,
                     statics=nc.statics,
-                    export_type="nested"
+                    export_type="nested",
+                    line_number=nc.line_number
                 )}
             )
 
@@ -366,7 +392,8 @@ class SDKIndexer:
                 classes_json[class_name] = {
                     "members": class_info.members,
                     "statics": class_info.statics,
-                    "export_type": class_info.export_type
+                    "export_type": class_info.export_type,
+                    "line_number": class_info.line_number
                 }
             modules_json[name] = {
                 "file": mod_info.file,
@@ -374,7 +401,7 @@ class SDKIndexer:
             }
 
         data = {
-            "version": 1,
+            "version": 2,
             "built_at": time.time(),
             "sdk_mtime": sdk_mtime,
             "modules": modules_json
@@ -396,7 +423,8 @@ class SDKIndexer:
                 classes[class_name] = ClassInfo(
                     members=class_data.get('members', []),
                     statics=class_data.get('statics', []),
-                    export_type=class_data.get('export_type', 'named')
+                    export_type=class_data.get('export_type', 'named'),
+                    line_number=class_data.get('line_number', 0)
                 )
             self.modules[module_name] = ModuleInfo(
                 file=module_data.get('file', ''),

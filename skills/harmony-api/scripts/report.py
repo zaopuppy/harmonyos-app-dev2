@@ -17,6 +17,8 @@ class CheckResult:
     status: Status
     detail: str = ""
     recommendations: list = None  # List[Recommendation] - filled from recommender
+    file_path: str = ""   # Path to the .d.ts file where this item is defined
+    line_number: int = 0  # Line number in the .d.ts file where this item is defined
 
     def __post_init__(self):
         if self.recommendations is None:
@@ -32,7 +34,15 @@ def format_console(results: List[CheckResult]) -> str:
     for r in results:
         icon = r.status.value
         detail = f" ({r.detail})" if r.detail else ""
-        lines.append(f"[{icon}] {r.item}{detail}")
+        # Normalize path separators and show line number
+        file_info = ""
+        if r.file_path:
+            normalized = r.file_path.replace('\\', '/')
+            if r.line_number > 0:
+                file_info = f" [{normalized}:{r.line_number}]"
+            else:
+                file_info = f" [{normalized}]"
+        lines.append(f"[{icon}] {r.item}{detail}{file_info}")
 
         # Print recommendations for failed items
         if r.status != Status.OK and r.recommendations:
@@ -54,6 +64,8 @@ def format_json(results: List[CheckResult]) -> str:
                 "item": r.item,
                 "status": r.status.name,
                 "detail": r.detail,
+                "file_path": r.file_path.replace('\\', '/') if r.file_path else "",
+                "line_number": r.line_number,
                 "recommendations": [
                     {
                         "item": rec.item,

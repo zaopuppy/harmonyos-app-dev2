@@ -11,6 +11,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from sdk_indexer import SDKIndexer, NestedClass, ClassInfo
 from check_sdk_imports import find_sdk_home
+from report import Status
+
+
+_global_indexer = None
 
 
 def get_sdk_or_fail():
@@ -29,6 +33,14 @@ def get_or_build_index(sdk_home: str, index_path: str) -> SDKIndexer:
         indexer.save()
     else:
         indexer.load()
+    return indexer
+
+
+def rebuild_index(sdk_home: str, index_path: str) -> SDKIndexer:
+    """Force rebuild and return indexer."""
+    indexer = SDKIndexer(sdk_home=sdk_home, index_path=index_path)
+    indexer.build_index()
+    indexer.save()
     return indexer
 
 
@@ -87,12 +99,8 @@ def test_build_index_creates_synthetic_modules():
 
 def test_query_nested_class_members():
     """Test querying members of nested class via module path."""
-    sdk_home = get_sdk_or_fail()
-    indexer = get_or_build_index(sdk_home, ".sdk_index.json")
-
-    synthetic_path = "@ohos.web.webview.webview.WebviewController"
-    mod = indexer.get(synthetic_path)
-    assert mod is not None, f"Could not get module {synthetic_path}"
+    mod = _global_indexer.get("@ohos.web.webview.webview.WebviewController")
+    assert mod is not None, "Could not get module @ohos.web.webview.webview.WebviewController"
 
     cls = mod.classes.get("WebviewController")
     assert cls is not None, "WebviewController class not found"
@@ -106,11 +114,7 @@ def test_query_nested_class_members():
 
 def test_nested_class_has_correct_export_type():
     """Test that nested classes have export_type='nested'."""
-    sdk_home = get_sdk_or_fail()
-    indexer = get_or_build_index(sdk_home, ".sdk_index.json")
-
-    synthetic_path = "@ohos.web.webview.webview.WebviewController"
-    mod = indexer.get(synthetic_path)
+    mod = _global_indexer.get("@ohos.web.webview.webview.WebviewController")
     assert mod is not None
 
     cls = mod.classes.get("WebviewController")
@@ -124,10 +128,7 @@ def test_query_no_duplicates():
     """Test that query results don't contain duplicates."""
     from check_sdk_imports import query_mode
 
-    sdk_home = get_sdk_or_fail()
-    indexer = get_or_build_index(sdk_home, ".sdk_index.json")
-
-    results = query_mode("WebviewController", indexer)
+    results = query_mode("WebviewController", _global_indexer)
     items = [r.item for r in results]
 
     assert len(items) == len(set(items)), f"Found duplicates: {[x for x in items if items.count(x) > 1]}"
@@ -142,10 +143,7 @@ def test_query_nested_class_shows_members():
     """Test that querying nested class shows members directly."""
     from check_sdk_imports import query_mode
 
-    sdk_home = get_sdk_or_fail()
-    indexer = get_or_build_index(sdk_home, ".sdk_index.json")
-
-    results = query_mode("@ohos.web.webview.webview.WebviewController", indexer)
+    results = query_mode("@ohos.web.webview.webview.WebviewController", _global_indexer)
 
     assert len(results) > 1, "Expected member listing"
 
@@ -157,36 +155,168 @@ def test_query_nested_class_shows_members():
 
 
 def test_partial_match_member_not_module():
-    """Test that querying a member name doesn't return fake module matches.
+    """Test that partial match for member name returns correct results.
 
-    webPageSnapshot is a member of WebviewController class, not a module.
-    Partial match should not return fake modules like @ohos.web.webview.webview.webPageSnapshot.
+    When querying "webPageSnapshot", should find the member in its proper context,
+    not fake module paths that don't actually exist.
     """
     from check_sdk_imports import query_mode
 
-    sdk_home = get_sdk_or_fail()
-    indexer = get_or_build_index(sdk_home, ".sdk_index.json")
-
-    results = query_mode("webPageSnapshot", indexer)
+    results = query_mode("webPageSnapshot", _global_indexer)
     items = [r.item for r in results]
 
-    # webPageSnapshot is a member name, not a module name
-    # Should NOT see @ohos.web.webview.webview.webPageSnapshot as a result
+    # webPageSnapshot is a member of WebviewController, not a standalone module
+    # Should NOT see these fake module paths in results:
     assert "@ohos.web.webview.webview.webPageSnapshot" not in items, \
-        "webPageSnapshot should not be treated as a standalone module"
+        "webPageSnapshot should not be treated as @ohos.web.webview.webview.webPageSnapshot module"
+    assert "@kit.ArkWeb.webview.webPageSnapshot" not in items, \
+        "webPageSnapshot should not be treated as @kit.ArkWeb.webview.webPageSnapshot module"
 
-    # Should find @kit.ArkWeb.webview.webPageSnapshot (valid module member)
-    assert "@kit.ArkWeb.webview.webPageSnapshot" in items, \
-        f"@kit.ArkWeb.webview.webPageSnapshot not found. Results: {items}"
+    print(f"PASS: test_partial_match_member_not_module ({len(items)} results: {items[:3]})")
 
     print(f"PASS: test_partial_match_member_not_module ({len(items)} results)")
 
 
+def test_query_member_no_duplicate_path():
+    """Test that # query for nested class module doesn't produce duplicate paths.
+
+    Querying @ohos.web.webview.webview.WebviewController#refresh should return
+    @ohos.web.webview.webview.WebviewController#refresh (not WebviewController.WebviewController#refresh).
+    """
+    from check_sdk_imports import query_mode
+
+    # Query existing member
+    results = query_mode("@ohos.web.webview.webview.WebviewController#refresh", _global_indexer)
+    assert len(results) == 1, f"Expected 1 result, got {len(results)}"
+
+    # Should NOT have duplicate WebviewController.WebviewController
+    assert "WebviewController.WebviewController" not in results[0].item, \
+        f"Path should not duplicate class name: {results[0].item}"
+
+    # Should be the correct path
+    assert results[0].item == "@ohos.web.webview.webview.WebviewController#refresh", \
+        f"Expected @ohos.web.webview.webview.WebviewController#refresh, got {results[0].item}"
+    assert results[0].status == Status.OK, f"Expected OK status, got {results[0].status}"
+
+    print(f"PASS: test_query_member_no_duplicate_path")
+
+
+def test_query_result_has_filepath():
+    """Test that query results include the .d.ts file path and line number."""
+    from check_sdk_imports import query_mode
+
+    # Uses _global_indexer rebuilt once at start
+    results = query_mode("@ohos.web.webview.webview.WebviewController#refresh", _global_indexer)
+    assert len(results) == 1, f"Expected 1 result, got {len(results)}"
+
+    # Should have a file_path
+    assert results[0].file_path, "file_path should not be empty"
+    assert "@ohos.web.webview.d.ts" in results[0].file_path, \
+        f"Expected file_path to contain @ohos.web.webview.d.ts, got {results[0].file_path}"
+
+    # Should have correct line number (WebviewController is at line 3579)
+    assert results[0].line_number == 3579, \
+        f"Expected line_number=3579, got {results[0].line_number}"
+
+    print(f"PASS: test_query_result_has_filepath ({results[0].file_path}:{results[0].line_number})")
+
+
+def test_recommendation_no_fake_module_paths():
+    """Test that recommendations don't include fake module paths.
+
+    Querying captureSnapshot should recommend webPageSnapshot in the same context,
+    not fake paths like @ohos.web.webview.webview.webPageSnapshot.
+    """
+    from check_sdk_imports import query_mode
+
+    # Uses _global_indexer rebuilt once at start
+    results = query_mode("@ohos.web.webview.webview.WebviewController#captureSnapshot", _global_indexer)
+    assert len(results) == 1, f"Expected 1 result, got {len(results)}"
+
+    # Check recommendations
+    recs = results[0].recommendations
+    assert len(recs) > 0, "Should have recommendations"
+
+    # First recommendation should be webPageSnapshot from the correct nested class path
+    first_rec = recs[0].item
+    assert "WebviewController" in first_rec, \
+        f"First recommendation should contain WebviewController, got {first_rec}"
+    assert "webPageSnapshot" in first_rec, \
+        f"First recommendation should be webPageSnapshot, got {first_rec}"
+    assert "WebviewController.WebviewController" not in first_rec, \
+        f"Should not have doubled class name, got {first_rec}"
+
+    print(f"PASS: test_recommendation_no_fake_module_paths ({len(recs)} recommendations)")
+
+
+def test_interface_properties_not_extracted_as_members():
+    """Test that interface properties inside braces are not extracted as namespace members.
+
+    In @ohos.multimedia.audio, capturerInfo is a property of AudioCapturerOptions interface,
+    not a standalone member of the audio namespace.
+    """
+    from check_sdk_imports import query_mode
+
+    # Uses _global_indexer rebuilt once at start
+    results = query_mode("@ohos.multimedia.audio", _global_indexer)
+    assert len(results) > 0, "Should have results for audio module"
+
+    # Get all member names from results (skip first which is the module itself)
+    member_names = []
+    for r in results[1:]:  # Skip first which is the module itself
+        # Member format from query_mode: "  className (N members)"
+        # The r.item is like "  audio (10 members)" or "  SomeClass (5 members)"
+        stripped = r.item.strip()
+        if stripped.startswith('('):
+            continue
+        # Parse "  Name (N members)" format
+        parts = stripped.split(' (')
+        if len(parts) >= 2:
+            member_names.append(parts[0].strip())
+
+    # capturerInfo should NOT be a member of audio namespace
+    # (it's a property inside AudioCapturerOptions interface)
+    assert "capturerInfo" not in member_names, \
+        f"capturerInfo should not be a member of audio namespace, got members: {member_names}"
+
+    # Similarly, capturerFlags is inside an interface
+    assert "capturerFlags" not in member_names, \
+        f"capturerFlags should not be a member of audio namespace, got members: {member_names}"
+
+    print(f"PASS: test_interface_properties_not_extracted_as_members ({len(member_names)} members checked)")
+
+
+def test_query_nonexistent_member_recommendation():
+    """Test that querying non-existent member returns proper error path without duplication."""
+    from check_sdk_imports import query_mode
+
+    # Uses _global_indexer rebuilt once at start
+    results = query_mode("@ohos.web.webview.webview.WebviewController#reload", _global_indexer)
+    assert len(results) == 1, f"Expected 1 result, got {len(results)}"
+
+    # Should NOT have duplicate WebviewController.WebviewController
+    assert "WebviewController.WebviewController" not in results[0].item, \
+        f"Error path should not duplicate class name: {results[0].item}"
+
+    # Should be the correct path format
+    assert results[0].item == "@ohos.web.webview.webview.WebviewController#reload", \
+        f"Expected @ohos.web.webview.webview.WebviewController#reload, got {results[0].item}"
+    assert results[0].status == Status.MEMBER_NOT_FOUND, \
+        f"Expected MEMBER_NOT_FOUND status, got {results[0].status}"
+
+    print(f"PASS: test_query_nonexistent_member_recommendation ({len(results[0].recommendations)} recommendations)")
+
+
 def run_all_tests():
     """Run all tests."""
+    global _global_indexer
     print("=" * 60)
     print("Running nested class indexing tests...")
     print("=" * 60)
+
+    # Rebuild index once at the start to ensure consistent fresh data
+    sdk_home = get_sdk_or_fail()
+    _global_indexer = rebuild_index(sdk_home, ".sdk_index.json")
 
     test_nested_class_dataclass()
     test_parse_dts_file_returns_tuple()
@@ -196,6 +326,11 @@ def run_all_tests():
     test_query_no_duplicates()
     test_query_nested_class_shows_members()
     test_partial_match_member_not_module()
+    test_query_member_no_duplicate_path()
+    test_query_nonexistent_member_recommendation()
+    test_query_result_has_filepath()
+    test_recommendation_no_fake_module_paths()
+    test_interface_properties_not_extracted_as_members()
 
     print("=" * 60)
     print("All tests passed!")

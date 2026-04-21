@@ -255,6 +255,15 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
             # Direct module found - use its first (and usually only) class
             if mod.classes:
                 class_name = list(mod.classes.keys())[0]
+                # Check if this is a synthetic nested class module
+                # (5+ parts where last part = class name, and class_name == last segment)
+                parts = module_name.split('.')
+                if len(parts) > 4 and class_name == parts[-1]:
+                    # Synthetic nested class - class_name is already included in module path
+                    # Use module_name directly without appending class_name
+                    full = f"{module_name}#{member_name}"
+                else:
+                    full = f"{module_name}.{class_name}#{member_name}"
         else:
             # Fallback: find module by testing which prefix exists in index
             module_name = None
@@ -273,8 +282,7 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
                 class_name = parts[-1]
 
             mod = indexer.get(module_name)
-
-        full = f"{module_name}.{class_name}#{member_name}"
+            full = f"{module_name}.{class_name}#{member_name}" if class_name else f"{module_name}#{member_name}"
 
         mod = indexer.get(module_name)
         if not mod:
@@ -284,13 +292,13 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
         cls = mod.classes.get(class_name) if class_name else None
         if not cls:
             recs = recommend(member_name, indexer, top_n=3)
-            return [CheckResult(full, Status.CLASS_NOT_FOUND, f"class '{class_name}' not found", recommendations=recs)]
+            return [CheckResult(full, Status.CLASS_NOT_FOUND, f"class '{class_name}' not found", recommendations=recs, file_path=mod.file, line_number=0)]
 
         if member_name not in cls.members and member_name not in cls.statics:
             recs = recommend(member_name, indexer, top_n=3)
-            return [CheckResult(full, Status.MEMBER_NOT_FOUND, f"member '{member_name}' not found", recommendations=recs)]
+            return [CheckResult(full, Status.MEMBER_NOT_FOUND, f"member '{member_name}' not found", recommendations=recs, file_path=mod.file, line_number=cls.line_number)]
 
-        return [CheckResult(full, Status.OK)]
+        return [CheckResult(full, Status.OK, file_path=mod.file, line_number=cls.line_number)]
 
     elif query_str.startswith('@ohos.') or query_str.startswith('@hms.'):
         # Query module or module.class
@@ -332,21 +340,21 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
 
         if not class_name:
             # Query module: list all classes
-            results = [CheckResult(query_str, Status.OK)]
+            results = [CheckResult(query_str, Status.OK, file_path=mod.file)]
             for class_name, class_info in mod.classes.items():
                 members = class_info.members + class_info.statics
-                results.append(CheckResult(f"  {class_name} ({len(members)} members)", Status.OK))
+                results.append(CheckResult(f"  {class_name} ({len(members)} members)", Status.OK, file_path=mod.file, line_number=class_info.line_number))
             return results
 
         # Query module.class: list all members
         cls = mod.classes.get(class_name) if class_name else None
         if not cls:
             recs = recommend(class_name, indexer, top_n=3)
-            return [CheckResult(f"{module_name}.{class_name}", Status.CLASS_NOT_FOUND, f"class '{class_name}' not found", recommendations=recs)]
+            return [CheckResult(f"{module_name}.{class_name}", Status.CLASS_NOT_FOUND, f"class '{class_name}' not found", recommendations=recs, file_path=mod.file, line_number=0)]
 
         # Use query_str for display when showing synthetic nested class members
         display_path = query_str if show_members_directly else f"{module_name}.{class_name}"
-        results = [CheckResult(display_path, Status.OK)]
+        results = [CheckResult(display_path, Status.OK, file_path=mod.file, line_number=cls.line_number)]
         for member in cls.members + cls.statics:
             results.append(CheckResult(f"  {member}", Status.OK))
         return results
@@ -376,7 +384,12 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
             for class_name, class_info in mod_info.classes.items():
                 for member in class_info.members + class_info.statics:
                     if query_str in member:
-                        path = f"{mod_name}.{class_name}.{member}"
+                        # For nested class modules where class_name == last segment of mod_name,
+                        # construct path as mod_name#member to avoid doubled class name
+                        if class_name == mod_name.rsplit('.', 1)[-1]:
+                            path = f"{mod_name}#{member}"
+                        else:
+                            path = f"{mod_name}.{class_name}.{member}"
                         if path == query_str:
                             continue
                         # Skip when class_name equals the last segment of mod_name
@@ -384,9 +397,9 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
                         # e.g., @ohos.web.webview + webview class = @ohos.web.webview.webview.webPageSnapshot
                         # which looks like module @ohos.web.webview.webview + member webPageSnapshot
                         if class_name == mod_name.rsplit('.', 1)[-1]:
-                            # Skip if the path itself is not a real module
-                            # (only allow if path IS a valid module, which is the nested class case)
-                            if not indexer.get(path):
+                            # For nested class modules (class_name == last segment of mod_name),
+                            # use mod_name to check if the module exists - this is a valid nested class path
+                            if not indexer.get(mod_name):
                                 continue
                         member_results.append(path)
 
@@ -399,13 +412,15 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
         for m in module_matches[:10]:
             if m not in seen:
                 seen.add(m)
-                unique_results.append(m)
+                mod_info = indexer.get(m)
+                unique_results.append(CheckResult(m, Status.OK, file_path=mod_info.file if mod_info else ""))
         for m in member_results[:10]:
             if m not in seen:
                 seen.add(m)
-                unique_results.append(m)
+                mod_info = indexer.get(m)
+                unique_results.append(CheckResult(m, Status.OK, file_path=mod_info.file if mod_info else ""))
 
-        return [CheckResult(m, Status.OK) for m in unique_results]
+        return unique_results
 
 
 def main():

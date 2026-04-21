@@ -156,11 +156,42 @@ def recommend(member_name: str, indexer, top_n: int = 3, context_module: str = N
                     if context_kw & candidate_kw:  # intersection non-empty
                         combined += BOOST_WEIGHT
 
-                # source is the full member reference
-                source = f"{module_name}.{class_name}.{member}"
+                # source is the full member reference in module.class.member format
+                # For synthetic nested class modules where module_name ends with class_name AND
+                # the module exists, don't duplicate the class name
+                if module_name.endswith(f'.{class_name}') and indexer.get(module_name):
+                    source = f"{module_name}.{member}"
+                    parts = source.split('.')
+                    # item display: module#member for nested class paths
+                    item = f"{module_name}#{member}"
+                else:
+                    source = f"{module_name}.{class_name}.{member}"
+                    parts = source.split('.')
+                    # item is the display format - use module#member for recommendations
+                    if len(parts) > 3 and parts[-2] == class_name:
+                        item = f"{'.'.join(parts[:-1])}#{member}"
+                    else:
+                        item = source
+
+                # Validate: skip if path looks like a fake module hierarchy
+                # Extract the potential module path (everything except the member)
+                potential_module = '.'.join(parts[:-1])
+                if len(parts) >= 2 and parts[-1] == parts[-2]:
+                    # Doubled name at end (e.g., webPageSnapshot.webPageSnapshot)
+                    continue
+                if len(parts) >= 3 and parts[-2] == parts[-3]:
+                    # Doubled class name pattern
+                    # Skip ONLY if the doubled module doesn't exist AND the parent module also doesn't exist
+                    # If the parent module exists, it's a valid nested class reference
+                    parent_module = module_name  # module_name is the actual existing module
+                    if not indexer.get(parent_module) and not indexer.get(potential_module):
+                        continue  # Skip only if both are invalid
+                elif not indexer.get(potential_module):
+                    # The module path itself doesn't exist as a real module
+                    continue
 
                 rec = Recommendation(
-                    item=source,
+                    item=item,
                     member_name=member,
                     levenshtein_dist=dist,
                     prefix_score=prefix,
@@ -168,9 +199,15 @@ def recommend(member_name: str, indexer, top_n: int = 3, context_module: str = N
                     source=source
                 )
 
-                # Dedupe by member_name, keeping highest combined score
+                # Dedupe by member_name, but when scores are equal, prefer more specific module path
+                specificity = len(parts)
                 if member not in seen_members or combined > seen_members[member].combined_score:
                     seen_members[member] = rec
+                elif combined == seen_members[member].combined_score:
+                    # Same score - prefer the one with more specificity (longer path)
+                    existing_specificity = len(seen_members[member].source.split('.'))
+                    if specificity > existing_specificity:
+                        seen_members[member] = rec
 
     # Sort by combined_score descending
     sorted_recs = sorted(seen_members.values(), key=lambda r: r.combined_score, reverse=True)
