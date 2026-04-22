@@ -240,6 +240,11 @@ cmd /c "hdc file recv /data/local/tmp\screen.png .\screen.png"
 | `uitest uiInput click <x> <y>` | 点击 | 模拟点击操作 |
 | `uitest uiInput swipe` | 滑动 | 模拟滑动操作 |
 | `uitest uiInput text <content>` | 文本输入 | 模拟文本输入 |
+| **hvigorw** | 构建工具 | |
+| `hvigorw tasks` | 查看所有任务 | 查看模块可用构建任务 |
+| `hvigorw --mode module -p product=default -p module={module_name}@default assembleHap --analyze=normal --parallel --incremental --no-daemon` | 构建 HAP | entry 模块构建 |
+| `hvigorw --mode module -p product=default -p module={module_name}@default assembleHar --analyze=normal --parallel --incremental --no-daemon` | 构建 HAR | har 模块构建 |
+| `hvigorw --stop-daemon-all` | 停止 daemon | 停止所有 hvigor daemon |
 
 ---
 
@@ -311,6 +316,24 @@ hdc shell "param get sys.bootevent"
 hdc shell "param set debug.test 1"
 ```
 
+### 构建（hvigorw）
+
+**前提：确保 hvigorw 在 PATH 中，或设置 `DEVECO_SDK_HOME` 环境变量后配置路径。**
+
+```bash
+# 构建 entry 模块（HAP）
+hvigorw --mode module -p product=default -p module={module_name}@default assembleHap --analyze=normal --parallel --incremental --no-daemon
+
+# 构建 har 模块
+hvigorw --mode module -p product=default -p module={module_name}@default assembleHar --analyze=normal --parallel --incremental --no-daemon
+
+# 查看所有可用任务
+hvigorw tasks
+
+# 停止所有 daemon（构建卡住时使用）
+hvigorw --stop-daemon-all
+```
+
 ---
 
 ## 详细文档索引
@@ -326,3 +349,4 @@ hdc shell "param set debug.test 1"
 | `reference/bm-tool.md` | bm install/uninstall/dump/clean 命令 |
 | `reference/param.md` | 系统参数查看/设置/等待 |
 | `reference/uitest.md` | UI 测试：截图、布局、点击、滑动、输入 |
+| `reference/hvigor.md` | hvigor 构建工具：环境配置、构建命令、常用参数 |
