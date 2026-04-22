@@ -7,7 +7,9 @@ import sys
 import os
 
 # Add harmony-api/scripts to path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'skills', 'harmony-api', 'scripts'))
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'skills', 'harmony-api', 'scripts'))
 
 from sdk_indexer import SDKIndexer, NestedClass, ClassInfo
 from check_sdk_imports import find_sdk_home

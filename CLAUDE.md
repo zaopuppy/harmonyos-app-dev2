@@ -15,3 +15,7 @@ HarmonyOS 应用开发技能工具箱，为 Agent 系统提供 ArkTS 语法、Ar
 ## 使用方式
 
 Agent 可直接读取 `skills/<name>/skill.md` 获取对应技能指导。
+
+## 代码规范
+
+- **Python**：单行代码不超过 120 字符

@@ -22,8 +22,12 @@ results = [
     CheckResult('@ohos.app.ability.Ability#nonExistent', Status.MEMBER_NOT_FOUND,
         "member 'nonExistent' not found",
         recommendations=[
-            Recommendation('@ohos.app.ability.Ability#onConfigurationUpdate', 'onConfigurationUpdate', 1, 0.0, 0.9, 'other_class'),
-            Recommendation('@ohos.app.ability.Ability#onWindowStageCreate', 'onWindowStageCreate', 15, 0.5, 0.5, 'other_class'),
+            Recommendation(
+                '@ohos.app.ability.Ability#onConfigurationUpdate',
+                'onConfigurationUpdate', 1, 0.0, 0.9, 'other_class'),
+            Recommendation(
+                '@ohos.app.ability.Ability#onWindowStageCreate',
+                'onWindowStageCreate', 15, 0.5, 0.5, 'other_class'),
         ])
 ]
 print(format_console(results))

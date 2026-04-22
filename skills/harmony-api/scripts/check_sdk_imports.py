@@ -147,7 +147,9 @@ def check_import(imp: ImportInfo, indexer: SDKIndexer, recommend_enabled: bool =
     return CheckResult(item, Status.OK)
 
 
-def check_member_access(acc: MemberAccess, indexer: SDKIndexer, recommend_enabled: bool = True, context_module: str = None) -> CheckResult:
+def check_member_access(acc: MemberAccess, indexer: SDKIndexer,
+                        recommend_enabled: bool = True,
+                        context_module: str = None) -> CheckResult:
     """Check if a member access (class#member) exists in SDK. Skip non-SDK modules."""
     item = f"{acc.module}.{acc.class_name}#{acc.member}"
 
@@ -168,7 +170,8 @@ def check_member_access(acc: MemberAccess, indexer: SDKIndexer, recommend_enable
             break
 
     if not cls:
-        # Try treating class_name as a submodule path (e.g., webview in @kit.ArkWeb might be @kit.ArkWeb.webview)
+        # Try treating class_name as a submodule path
+        # (e.g., webview in @kit.ArkWeb might be @kit.ArkWeb.webview)
         submodule_name = f"{acc.module}.{acc.class_name}"
         submod = indexer.get(submodule_name)
         if submod:
@@ -177,11 +180,14 @@ def check_member_access(acc: MemberAccess, indexer: SDKIndexer, recommend_enable
                 if acc.member in sub_cinfo.members or acc.member in sub_cinfo.statics:
                     return CheckResult(item, Status.OK)
         recs = recommend(acc.member, indexer, top_n=3, context_module=context_module) if recommend_enabled else []
-        return CheckResult(item, Status.CLASS_NOT_FOUND, f"class '{acc.class_name}' not found", recommendations=recs)
+        return CheckResult(item, Status.CLASS_NOT_FOUND,
+                          f"class '{acc.class_name}' not found", recommendations=recs)
 
     if acc.member not in cls.members and acc.member not in cls.statics:
         recs = recommend(acc.member, indexer, top_n=3, context_module=context_module) if recommend_enabled else []
-        return CheckResult(item, Status.MEMBER_NOT_FOUND, f"member '{acc.member}' not found in class '{acc.class_name}'", recommendations=recs)
+        return CheckResult(item, Status.MEMBER_NOT_FOUND,
+                          f"member '{acc.member}' not found in class '{acc.class_name}'",
+                          recommendations=recs)
 
     return CheckResult(item, Status.OK)
 
@@ -293,11 +299,16 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
         cls = mod.classes.get(class_name) if class_name else None
         if not cls:
             recs = recommend(member_name, indexer, top_n=3)
-            return [CheckResult(full, Status.CLASS_NOT_FOUND, f"class '{class_name}' not found", recommendations=recs, file_path=mod.file, line_number=0)]
+            return [CheckResult(full, Status.CLASS_NOT_FOUND,
+                              f"class '{class_name}' not found",
+                              recommendations=recs, file_path=mod.file, line_number=0)]
 
         if member_name not in cls.members and member_name not in cls.statics:
             recs = recommend(member_name, indexer, top_n=3)
-            return [CheckResult(full, Status.MEMBER_NOT_FOUND, f"member '{member_name}' not found", recommendations=recs, file_path=mod.file, line_number=cls.line_number)]
+            return [CheckResult(full, Status.MEMBER_NOT_FOUND,
+                              f"member '{member_name}' not found",
+                              recommendations=recs, file_path=mod.file,
+                              line_number=cls.line_number)]
 
         return [CheckResult(full, Status.OK, file_path=mod.file, line_number=cls.line_number)]
 
@@ -344,14 +355,21 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
             results = [CheckResult(query_str, Status.OK, file_path=mod.file)]
             for class_name, class_info in mod.classes.items():
                 members = class_info.members + class_info.statics
-                results.append(CheckResult(f"  {class_name} ({len(members)} members)", Status.OK, file_path=mod.file, line_number=class_info.line_number))
+                results.append(CheckResult(
+                    f"  {class_name} ({len(members)} members)",
+                    Status.OK, file_path=mod.file,
+                    line_number=class_info.line_number))
             return results
 
         # Query module.class: list all members
         cls = mod.classes.get(class_name) if class_name else None
         if not cls:
             recs = recommend(class_name, indexer, top_n=3)
-            return [CheckResult(f"{module_name}.{class_name}", Status.CLASS_NOT_FOUND, f"class '{class_name}' not found", recommendations=recs, file_path=mod.file, line_number=0)]
+            return [CheckResult(f"{module_name}.{class_name}",
+                              Status.CLASS_NOT_FOUND,
+                              f"class '{class_name}' not found",
+                              recommendations=recs, file_path=mod.file,
+                              line_number=0)]
 
         # Use query_str for display when showing synthetic nested class members
         display_path = query_str if show_members_directly else f"{module_name}.{class_name}"

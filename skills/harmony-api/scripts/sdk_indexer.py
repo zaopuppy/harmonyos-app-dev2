@@ -177,14 +177,20 @@ class SDKIndexer:
                         words = before_paren.split()
                         if words:
                             name = words[-1]
-                            if name and name not in ('if', 'else', 'for', 'while', 'do', 'switch', 'try', 'catch', 'finally', 'get', 'set'):
+                            if name and name not in (
+                                'if', 'else', 'for', 'while', 'do',
+                                'switch', 'try', 'catch', 'finally',
+                                'get', 'set'):
                                 if name not in members:
                                     members.append(name)
                     else:
                         colon_idx = decl.find(':')
                         if colon_idx != -1:
                             name = decl[:colon_idx].strip().split()[-1]
-                            if name and name not in ('if', 'else', 'for', 'while', 'do', 'switch', 'try', 'catch', 'finally', 'type'):
+                            if name and name not in (
+                                'if', 'else', 'for', 'while', 'do',
+                                'switch', 'try', 'catch', 'finally',
+                                'type'):
                                 if name not in members:
                                     members.append(name)
                 else:
@@ -241,7 +247,8 @@ class SDKIndexer:
                         # Find line number in original content by searching for the class declaration
                         class_search = f'class {nested_class_name}'
                         class_pos_in_original = content.find(class_search)
-                        nested_line = content[:class_pos_in_original].count('\n') + 1 if class_pos_in_original >= 0 else 0
+                        nested_line = (content[:class_pos_in_original].count('\n') + 1
+                                      if class_pos_in_original >= 0 else 0)
                         nested_classes.append(NestedClass(
                             parent_module=self._get_module_name_from_filepath(filepath),
                             namespace=ns_name,
@@ -340,7 +347,9 @@ class SDKIndexer:
 
         mod_info.classes = resolved_classes
 
-    def _copy_class_from_reexport(self, resolved_classes: dict, local_name: str, ref_module: str, ref_class_name: str) -> None:
+    def _copy_class_from_reexport(self, resolved_classes: dict,
+                                  local_name: str, ref_module: str,
+                                  ref_class_name: str) -> None:
         """Look up ref_module and copy ref_class_name's members into resolved_classes[local_name]."""
         ref_mod_info = self.modules.get(ref_module)
         if not ref_mod_info:

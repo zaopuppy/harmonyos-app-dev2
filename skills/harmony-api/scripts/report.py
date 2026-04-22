@@ -48,7 +48,9 @@ def format_console(results: List[CheckResult]) -> str:
         if r.status != Status.OK and r.recommendations:
             lines.append("    Did you mean:")
             for rec in r.recommendations:
-                reason = f"Levenshtein dist={rec.levenshtein_dist}" if rec.levenshtein_dist > 0 else f"prefix_score={rec.prefix_score:.2f}"
+                reason = (f"Levenshtein dist={rec.levenshtein_dist}"
+                          if rec.levenshtein_dist > 0
+                          else f"prefix_score={rec.prefix_score:.2f}")
                 lines.append(f"      → {rec.item} ({reason})")
 
     lines.append(f"\nSummary: {passed} passed, {failed} failed")
