@@ -1,12 +1,21 @@
+$repoSkillRoot = Join-Path $PSScriptRoot 'skills'
+$destinationRoots = @(
+    (Join-Path (Join-Path $HOME '.claude') 'skills')
+    (Join-Path (Join-Path $HOME '.agents') 'skills')
+)
+$skillNames = @(
+    'harmony-api'
+    'harmony-arkts'
+    'harmony-arkui'
+    'harmony-cli'
+    'harmony-template'
+    'harmony-ut'
+)
 
-
-# harmony-arkts
-# harmony-arkui
-# harmony-cli
-# harmony-template
-# harmony-ut
-# harmony-api
-
-New-Item -ItemType SymbolicLink -Path 'C:\Users\zhaoy\.claude\skills\harmony-cli' -Target 'E:\work\arkts\skill\harmonyos-app-dev2\skills\harmony-cli'
-New-Item -ItemType SymbolicLink -Path 'C:\Users\zhaoy\.agents\skills\harmony-api' -Target 'E:\work\arkts\skill\harmonyos-app-dev2\skills\harmony-api'
-
+foreach ($destinationRoot in $destinationRoots) {
+    foreach ($skillName in $skillNames) {
+        New-Item -ItemType SymbolicLink `
+            -Path (Join-Path $destinationRoot $skillName) `
+            -Target (Join-Path $repoSkillRoot $skillName)
+    }
+}
