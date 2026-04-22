@@ -898,14 +898,14 @@
             <!-- Image placeholders for problematic code -->
             <div class="image-pair reveal">
                 <div class="image-container">
-                    <img src="bad-api.png" alt="API 不存在问题截图">
+                    <img src="images/bad-api.png" alt="API 不存在问题截图">
                     <div class="label">
                         <span class="badge badge-red">API 幻觉</span><br>
                         <span style="color: var(--text-secondary);">Property 'captureSnapshot' does not exist</span>
                     </div>
                 </div>
                 <div class="image-container">
-                    <img src="bad-import.png" alt="Import 错误截图">
+                    <img src="images/bad-import.png" alt="Import 错误截图">
                     <div class="label">
                         <span class="badge badge-red">Import 错误</span><br>
                         <span style="color: var(--text-secondary);">Module path incorrect</span>
@@ -1278,9 +1278,31 @@ obj[<span class="code-string">'key'</span>] = 1;
     </section>
 
     <!-- ===========================================
-         SLIDE 10: HDC TOOLS
+         SLIDE 10: SKILL COMPARISON
          =========================================== -->
     <section class="slide" data-slide="10">
+        <div class="bg-grid"></div>
+        <div class="bg-gradient"></div>
+        <div class="slide-content">
+            <div class="section-label reveal">
+                <span class="text-magenta">//</span> 04
+            </div>
+            <h2 class="reveal">修复 <span class="accent">效果对比</span></h2>
+
+            <div class="reveal" style="flex: 1; display: flex; align-items: center; justify-content: center; margin-top: var(--content-gap);">
+                <img src="images/noskill-vs-skill.png" alt="未使用Skill vs 使用Skill对比" class="clickable-img" style="max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 12px; cursor: zoom-in;">
+            </div>
+            <p class="reveal" style="text-align: center; margin-top: var(--element-gap); font-size: var(--small-size); color: var(--text-secondary);">
+                点击图片放大
+            </p>
+        </div>
+        <div class="slide-number">10</div>
+    </section>
+
+    <!-- ===========================================
+         SLIDE 11: HDC TOOLS
+         =========================================== -->
+    <section class="slide" data-slide="11">
         <div class="bg-grid"></div>
         <div class="bg-gradient"></div>
         <div class="slide-content">
@@ -1328,9 +1350,9 @@ obj[<span class="code-string">'key'</span>] = 1;
     </section>
 
     <!-- ===========================================
-         SLIDE 11: IMAGE TO CODE
+         SLIDE 12: IMAGE TO CODE
          =========================================== -->
-    <section class="slide" data-slide="11">
+    <section class="slide" data-slide="12">
         <div class="bg-grid"></div>
         <div class="bg-gradient"></div>
         <div class="slide-content">
@@ -1341,14 +1363,9 @@ obj[<span class="code-string">'key'</span>] = 1;
 
             <div class="max-w-900 mx-auto">
                 <div class="card reveal" style="border-color: rgba(255, 0, 170, 0.3);">
-                    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                        <span class="badge badge-cyan">多模态</span>
-                        <div style="color: var(--text-secondary); font-size: var(--body-size);">
-                            UI 截图 → 结构化描述 → 代码生成
-                        </div>
-                    </div>
+                    <span class="badge badge-red">痛点</span>
                     <p style="margin-top: var(--element-gap); font-size: var(--body-size); color: var(--text-secondary);">
-                        传统交付是高保真 + 详细标注，文本模型无法直接处理
+                        传统交付是高保真 + 详细标注，文本模型无法直接处理，很难有效的生成代码
                     </p>
                 </div>
             </div>
@@ -1360,7 +1377,7 @@ obj[<span class="code-string">'key'</span>] = 1;
                     <p style="font-size: var(--small-size); color: var(--text-secondary);">
                         多模态模型做预处理，转为描述数据后大模型生成
                     </p>
-                    <img src="multi-model.png" alt="多模态预处理示意" class="clickable-img" style="width: 100%; max-height: 120px; object-fit: contain; border-radius: 8px; margin-top: var(--element-gap); cursor: zoom-in;">
+                    <img src="images/multi-model.png" alt="多模态预处理示意" class="clickable-img" style="width: 100%; max-height: 120px; object-fit: contain; border-radius: 8px; margin-top: var(--element-gap); cursor: zoom-in;">
                     <div style="margin-top: var(--element-gap);">
                         <span class="strategy-tag strategy-do">✓ 门槛低</span>
                     </div>
@@ -1371,7 +1388,7 @@ obj[<span class="code-string">'key'</span>] = 1;
                     <p style="font-size: var(--small-size); color: var(--text-secondary);">
                         通过原始高保真交付件的结构化数据，经过规则映射转换后结合代码生成
                     </p>
-                    <img src="multi-model.png" alt="规则映射转换示意" class="clickable-img" style="width: 100%; max-height: 120px; object-fit: contain; border-radius: 8px; margin-top: var(--element-gap); cursor: zoom-in;">
+                    <img src="images/multi-model.png" alt="规则映射转换示意" class="clickable-img" style="width: 100%; max-height: 120px; object-fit: contain; border-radius: 8px; margin-top: var(--element-gap); cursor: zoom-in;">
                     <div style="margin-top: var(--element-gap);">
                         <span class="strategy-tag strategy-do">✓ 精度高</span>
                     </div>
@@ -1387,9 +1404,9 @@ obj[<span class="code-string">'key'</span>] = 1;
     </section>
 
     <!-- ===========================================
-         SLIDE 12: SUMMARY
+         SLIDE 13: SUMMARY
          =========================================== -->
-    <section class="slide" data-slide="12">
+    <section class="slide" data-slide="13">
         <div class="bg-grid"></div>
         <div class="bg-gradient"></div>
         <div class="slide-content text-center">
@@ -1435,7 +1452,7 @@ obj[<span class="code-string">'key'</span>] = 1;
                 让大模型真正理解鸿蒙生态
             </p>
         </div>
-        <div class="slide-number">12</div>
+        <div class="slide-number">13</div>
     </section>
 
     <!-- ===========================================
