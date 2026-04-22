@@ -111,7 +111,7 @@ class SDKIndexer:
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
         except (IOError, UnicodeDecodeError):
-            return None
+            return None, []
 
         # Module name = basename without extension
         module_name = self._get_module_name_from_filepath(filepath)
