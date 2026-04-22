@@ -10,7 +10,10 @@ HarmonyOS 项目构建工具，基于 Hvigor。
 # Windows CMD
 where hvigorw
 
-# PowerShell / Git Bash / Linux / Mac
+# PowerShell
+Get-Command hvigorw
+
+# Git Bash / Linux / Mac
 which hvigorw
 ```
 

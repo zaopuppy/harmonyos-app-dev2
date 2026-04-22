@@ -17,6 +17,7 @@ description: |
 ```bash
 # 检查 hdc 是否可用
 where hdc        # Windows CMD
+Get-Command hdc  # PowerShell
 which hdc        # Linux/Mac/Git Bash
 ```
 
