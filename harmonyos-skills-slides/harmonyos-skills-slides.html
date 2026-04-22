@@ -938,7 +938,7 @@
                 <div class="card" style="border-left: 3px solid var(--accent-orange);">
                     <span class="badge badge-orange">工程模板</span>
                     <p style="margin-top: var(--element-gap); font-size: var(--small-size);">IDE 自带，变化剧烈</p>
-                    <span class="strategy-tag strategy-dont">✗ 不解决</span>
+                    <span class="strategy-tag strategy-do">✓ 模板 skill</span>
                 </div>
                 <div class="card" style="border-left: 3px solid var(--accent-cyan);">
                     <span class="badge badge-cyan">ArkTS 语法</span>
@@ -985,17 +985,56 @@
             </div>
             <h2 class="reveal">工程模板</h2>
 
-            <div class="max-w-900 mx-auto">
-                <div class="card card-glow reveal" style="text-align: center; padding: clamp(2rem, 5vw, 4rem);">
-                    <h3 style="color: var(--accent-orange); margin-bottom: var(--element-gap);">IDE 自带功能 · 变化剧烈</h3>
-                    <p style="font-size: var(--body-size); color: var(--text-secondary); max-width: 600px; margin: 0 auto var(--content-gap);">
-                        小众场景，性价比低。通过 IDE 自动创建或参考其他模块文件结构通常可自动解决。
-                    </p>
-                    <div class="strategy-tag strategy-dont" style="font-size: var(--body-size);">
-                        <span style="font-size: 1.5em;">✗</span>
-                        <span>策略：不解决</span>
+            <div class="grid-2" style="gap: var(--content-gap); align-items: start;">
+                <div class="reveal">
+                    <h4 style="color: var(--accent-orange); margin-bottom: var(--element-gap);">目录结构</h4>
+                    <div class="code-block" style="font-size: clamp(0.7rem, 1.2vw, 0.85rem); line-height: 1.6;">
+<span class="code-keyword">MyApp/</span>
+<span class="code-comment">├── AppScope/app.json5</span>
+<span class="code-keyword">├── entry/</span>
+<span class="code-comment">│   ├── src/main/</span>
+<span class="code-comment">│   │   ├── ets/</span>
+<span class="code-comment">│   │   │   ├── AbilityStage.ets</span>
+<span class="code-comment">│   │   │   ├── abilities/</span>
+<span class="code-comment">│   │   │   │   └── MainAbility.ets</span>
+<span class="code-comment">│   │   │   ├── pages/Index.ets</span>
+<span class="code-comment">│   │   │   ├── components/</span>
+<span class="code-comment">│   │   │   ├── models/</span>
+<span class="code-comment">│   │   │   └── utils/</span>
+<span class="code-comment">│   │   └── resources/</span>
+<span class="code-comment">│   └── module.json5</span>
+<span class="code-keyword">├── oh_modules/</span>
+<span class="code-comment">├── build-profile.json5</span>
+<span class="code-keyword">└── oh-package.json5</span>
                     </div>
                 </div>
+                <div class="reveal">
+                    <h4 style="color: var(--accent-orange); margin-bottom: var(--element-gap);">核心配置</h4>
+                    <div class="code-block" style="font-size: clamp(0.65rem, 1.1vw, 0.8rem); line-height: 1.5;">
+<span class="code-comment">// module.json5</span>
+{
+  <span class="code-keyword">"module"</span>: {
+    <span class="code-string">"name"</span>: <span class="code-string">"entry"</span>,
+    <span class="code-string">"type"</span>: <span class="code-string">"entry"</span>,
+    <span class="code-string">"mainElement"</span>: <span class="code-string">"MainAbility"</span>,
+    <span class="code-string">"pages"</span>: <span class="code-string">"$profile:main_pages"</span>,
+    <span class="code-string">"abilities"</span>: [{
+      <span class="code-string">"name"</span>: <span class="code-string">"MainAbility"</span>,
+      <span class="code-string">"srcEntry"</span>: <span class="code-string">"./ets/abilities/MainAbility.ets"</span>,
+      <span class="code-string">"skills"</span>: [{
+        <span class="code-string">"entities"</span>: [<span class="code-string">"entity.system.home"</span>],
+        <span class="code-string">"actions"</span>: [<span class="code-string">"action.system.home"</span>]
+      }]
+    }]
+  }
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="strategy-tag strategy-do reveal" style="margin-top: var(--content-gap);">
+                <span>✓</span>
+                <span>策略：通过 @harmony-template skill 提供完整模板参考</span>
             </div>
         </div>
         <div class="slide-number">04</div>
@@ -1419,7 +1458,7 @@ obj[<span class="code-string">'key'</span>] = 1;
                 <div class="summary-item">
                     <div class="icon">🏗️</div>
                     <h4 class="text-orange">工程模板</h4>
-                    <p>IDE 自动处理</p>
+                    <p>模板 skill</p>
                 </div>
                 <div class="summary-item">
                     <div class="icon">📝</div>
