@@ -15,11 +15,26 @@ description: |
 
 ## 环境准备
 
+### 设置 DEVECO_SDK_HOME / DEVECO_HOME / PATH
+
+**在使用任何工具前先执行此步骤。** 优先使用环境变量，若无则从 `hdc` 路径推导。
+
+hdc 位于 `$DEVECO_SDK_HOME/default/openharmony/toolchains/hdc`，可用以下命令推导：
+
+| Shell | 设置命令 |
+|-------|---------|
+| **PowerShell** | `if (-not $env:DEVECO_SDK_HOME) { $hdcPath = (Get-Command hdc).Source; $env:DEVECO_SDK_HOME = (Split-Path (Split-Path (Split-Path $hdcPath -Parent) -Parent) -Parent) }; $env:DEVECO_HOME = "$env:DEVECO_SDK_HOME\.."; $env:PATH = "$env:DEVECO_HOME\tools\node;$env:DEVECO_HOME\tools\ohpm\bin;$env:DEVECO_HOME\tools\hvigor\bin;$env:PATH"` |
+| **Git Bash** | `export DEVECO_SDK_HOME=${DEVECO_SDK_HOME:-$(dirname $(dirname $(which hdc))))} && export DEVECO_HOME=$DEVECO_SDK_HOME/.. && export PATH=$DEVECO_HOME/tools/node:$DEVECO_HOME/tools/ohpm/bin:$DEVECO_HOME/tools/hvigor/bin:$PATH` |
+| **CMD** | `if "%DEVECO_SDK_HOME%"=="" for /f "delims=" %%i in ('where hdc') do set "DEVECO_SDK_HOME=%%~dpi..\.." && set DEVECO_HOME=%DEVECO_SDK_HOME%.. && set PATH=%DEVECO_HOME%\tools\node;%DEVECO_HOME%\tools\ohpm\bin;%DEVECO_HOME%\tools\hvigor\bin;%PATH%` |
+
+> **重要**：不要硬编码任何路径（如 `C:\Program Files\...`）。所有路径必须通过环境变量或命令推导获取。
+
+### 检查工具是否可用
+
 ```bash
-# 检查 hdc 是否可用
 where hdc        # Windows CMD
 Get-Command hdc  # PowerShell
-which hdc        # Linux/Mac/Git Bash
+which hdc        # Git Bash / Linux / Mac
 ```
 
 ---
@@ -319,8 +334,6 @@ hdc shell "param set debug.test 1"
 ```
 
 ### 构建（hvigorw）
-
-**前提：确保 hvigorw 在 PATH 中，或设置 `DEVECO_SDK_HOME` 环境变量后配置路径。**
 
 ```bash
 # 构建 entry 模块（HAP）
