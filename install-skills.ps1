@@ -22,6 +22,12 @@ if (-not (Test-Path $targetDir)) {
     Write-Debug "Target directory already exists"
 }
 
+# Remove existing items in target (may be old symlinks or directories)
+Get-ChildItem -Path $targetDir -Directory | ForEach-Object {
+    Write-Debug "Removing existing: $($_.FullName)"
+    Remove-Item $_.FullName -Recurse -Force
+}
+
 # Copy skills to target directory (override existing, exclude this script)
 Write-Host "Copying skills to $targetDir ..."
 $scriptName = Split-Path $scriptDir -Leaf
