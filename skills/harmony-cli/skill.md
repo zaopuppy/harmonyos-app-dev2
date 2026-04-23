@@ -1,10 +1,11 @@
 ---
 name: harmony-cli
 description: |
-  HarmonyOS 命令行工具，用于设备调试、截图、安装应用、查看日志、性能分析、获取系统信息等。
+  HarmonyOS 命令行工具，用于设备调试、编译构建、截图、安装应用、查看日志、性能分析、获取系统信息等。
   当用户说"截图"、"截屏"、"安装应用"、"卸载应用"、"查看日志"、"查看内存"、"查看CPU"、
-  "性能分析"、"抓trace"、"查看设备信息"、"系统参数"等场景时触发。
-  支持 hdc, hilog, hidumper, hitrace, hiperf, aa, bm, param, uitest 等工具。
+  "性能分析"、"抓trace"、"查看设备信息"、"系统参数"、"编译"、"构建"、"打包"、
+  "hvigorw"、"assembleHap"、"assembleHar"等场景时触发。
+  支持 hdc, hvigorw, hilog, hidumper, hitrace, hiperf, aa, bm, param, uitest 等工具。
   详细命令参数请查阅 reference/ 目录对应文档。
 ---
 
