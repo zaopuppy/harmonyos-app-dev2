@@ -176,7 +176,7 @@ def check_member_access(acc: MemberAccess, indexer: SDKIndexer,
         submod = indexer.get(submodule_name)
         if submod:
             # Check if member exists in any class of the submodule
-            for sub_cname, sub_cinfo in submod.classes.items():
+            for _, sub_cinfo in submod.classes.items():
                 if acc.member in sub_cinfo.members or acc.member in sub_cinfo.statics:
                     return CheckResult(item, Status.OK)
         recs = recommend(acc.member, indexer, top_n=3, context_module=context_module) if recommend_enabled else []
