@@ -323,18 +323,23 @@ hdc shell "param set debug.test 1"
 
 ### 构建（hvigorw）
 
+**执行前必须先加载环境脚本：**
+
+PowerShell: `. "$PSScriptRoot/setup_env.ps1"; hvigorw ...`
+Bash: `. ./setup_env.sh; hvigorw ...
+
 ```bash
 # 构建 entry 模块（HAP）
-hvigorw --mode module -p product=default -p module={module_name}@default assembleHap --analyze=normal --parallel --incremental --no-daemon
+. ./setup_env.sh; hvigorw --mode module -p product=default -p module={module_name}@default assembleHap --analyze=normal --parallel --incremental --no-daemon
 
 # 构建 har 模块
-hvigorw --mode module -p product=default -p module={module_name}@default assembleHar --analyze=normal --parallel --incremental --no-daemon
+. ./setup_env.sh; hvigorw --mode module -p product=default -p module={module_name}@default assembleHar --analyze=normal --parallel --incremental --no-daemon
 
 # 查看所有可用任务
-hvigorw tasks
+. ./setup_env.sh; hvigorw tasks
 
 # 停止所有 daemon（构建卡住时使用）
-hvigorw --stop-daemon-all
+. ./setup_env.sh; hvigorw --stop-daemon-all
 ```
 
 ---

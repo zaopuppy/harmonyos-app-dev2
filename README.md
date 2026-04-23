@@ -19,23 +19,14 @@ Agent 可直接读取 `skills/<name>/SKILL.md` 获取对应技能指导。
 
 ## 环境准备
 
-**每次打开新终端后，在使用本工具箱前请先执行以下命令配置环境变量。**
+**首次使用前，运行一次环境配置脚本：**
 
-### PowerShell
+| Shell | 命令 |
+|-------|------|
+| PowerShell | `. ./skills/harmony-cli/setup_env.ps1` |
+| Git Bash / Linux / Mac | `source ./skills/harmony-cli/setup_env.sh` |
 
-```powershell
-. ./setup_env.ps1
-```
-
-### Git Bash / Linux / Mac
-
-```bash
-source ./setup_env.sh
-```
-
-此脚本会自动从 `hdc` 路径推导 `DEVECO_SDK_HOME`，并设置 `DEVECO_HOME` 和 `PATH`。
-
-> **提示**：如果 `hdc` 已正确在 PATH 中，脚本会直接推导 `DEVECO_SDK_HOME`，无需手动指定路径。
+脚本会自动从 `hdc` 路径推导 `DEVECO_SDK_HOME`，无需手动指定路径。
 
 ## 目录结构
 

@@ -61,28 +61,33 @@ Commands:
 
 ## 构建示例
 
+**执行前必须先加载环境脚本：**
+
+PowerShell: `. "$PSScriptRoot/setup_env.ps1"; hvigorw ...`
+Bash: `. ./setup_env.sh; hvigorw ...
+
 ### 构建 entry 模块（HAP）
 
 ```bash
-hvigorw --mode module -p product=default -p module={module_name}@default assembleHap --analyze=normal --parallel --incremental --no-daemon
+. ./setup_env.sh; hvigorw --mode module -p product=default -p module={module_name}@default assembleHap --analyze=normal --parallel --incremental --no-daemon
 ```
 
 ### 构建 har 模块
 
 ```bash
-hvigorw --mode module -p product=default -p module={module_name}@default assembleHar --analyze=normal --parallel --incremental --no-daemon
+. ./setup_env.sh; hvigorw --mode module -p product=default -p module={module_name}@default assembleHar --analyze=normal --parallel --incremental --no-daemon
 ```
 
 ### 查看所有任务
 
 ```bash
-hvigorw tasks
+. ./setup_env.sh; hvigorw tasks
 ```
 
 ### 停止所有 daemon
 
 ```bash
-hvigorw --stop-daemon-all
+. ./setup_env.sh; hvigorw --stop-daemon-all
 ```
 
 ## 常用参数说明
