@@ -19,50 +19,23 @@ Agent 可直接读取 `skills/<name>/SKILL.md` 获取对应技能指导。
 
 ## 环境准备
 
-**在使用本工具箱前，请先在终端中手动执行以下命令检查并配置 PATH。**
+**每次打开新终端后，在使用本工具箱前请先执行以下命令配置环境变量。**
 
-### 第一步：检查工具是否可用
-
-```powershell
-# PowerShell
-where hdc; where hvigorw; where ohpm
-```
-
-```bash
-# Git Bash / Linux / Mac
-which hdc; which hvigorw; which ohpm
-```
-
-如果三个命令都找到，说明 PATH 已正确配置，跳过第二步。
-
-### 第二步：配置 PATH（如有命令找不到）
-
-`DEVECO_SDK_HOME` 指向 SDK 根目录（可在 DevEco Studio 安装目录找到）。
-
-**Windows PowerShell：**
+### PowerShell
 
 ```powershell
-# 手动设置 DEVECO_SDK_HOME（替换为你的实际路径）
-$env:DEVECO_SDK_HOME = "C:\Program Files\Huawei\DevEco Studio\sdk"
-$env:DEVECO_HOME = "$env:DEVECO_SDK_HOME\.."
-$env:PATH = "$env:DEVECO_SDK_HOME\default\openharmony\toolchains;$env:DEVECO_HOME\tools\node;$env:DEVECO_HOME\tools\ohpm\bin;$env:DEVECO_HOME\tools\hvigor\bin;$env:PATH"
-
-# 再次验证
-where hdc; where hvigorw; where ohpm
+. ./setup_env.ps1
 ```
 
-**macOS / Linux / Git Bash：**
+### Git Bash / Linux / Mac
 
 ```bash
-export DEVECO_SDK_HOME=${DEVECO_SDK_HOME:-$(dirname $(dirname $(dirname $(dirname $(dirname $(which hdc))))))}
-export DEVECO_HOME=$DEVECO_SDK_HOME/..
-export PATH=$DEVECO_SDK_HOME/default/openharmony/toolchains:$DEVECO_HOME/tools/node:$DEVECO_HOME/tools/ohpm/bin:$DEVECO_HOME/tools/hvigor/bin:$PATH
-
-# 再次验证
-which hdc; which hvigorw; which ohpm
+source ./setup_env.sh
 ```
 
-> **建议**：将上述配置加入 Shell 配置文件（`~/.bashrc`、`~/.zshrc`、`$PROFILE`），省去每次手动执行。
+此脚本会自动从 `hdc` 路径推导 `DEVECO_SDK_HOME`，并设置 `DEVECO_HOME` 和 `PATH`。
+
+> **提示**：如果 `hdc` 已正确在 PATH 中，脚本会直接推导 `DEVECO_SDK_HOME`，无需手动指定路径。
 
 ## 目录结构
 
