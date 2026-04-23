@@ -65,8 +65,21 @@ foreach ($skill in $skills) {
         }
     }
 
-    New-Item -ItemType SymbolicLink -Path $linkPath -Target $skill.FullName | Out-Null
-    Write-Debug "Linked: $linkPath -> $($skill.FullName)"
+    try {
+        New-Item -ItemType SymbolicLink -Path $linkPath -Target $skill.FullName -ErrorAction Stop | Out-Null
+        Write-Debug "Linked: $linkPath -> $($skill.FullName)"
+    } catch {
+        # Fallback: use cmd mklink (may still require admin)
+        $cmd = "mklink /D `"$linkPath`" `"$($skill.FullName)`""
+        Write-Debug "PowerShell symlink failed, trying cmd mklink: $cmd"
+        $output = cmd /c $cmd 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Debug "Linked via mklink: $linkPath -> $($skill.FullName)"
+        } else {
+            Write-Warning "Failed to create symlink for $($skill.Name). Try running as Administrator or enable Developer Mode."
+            Write-Debug "mklink output: $output"
+        }
+    }
 }
 
 Write-Host "Installation complete."
