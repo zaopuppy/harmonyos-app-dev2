@@ -45,7 +45,7 @@ which hdc; which hvigorw; which ohpm
 # 手动设置 DEVECO_SDK_HOME（替换为你的实际路径）
 $env:DEVECO_SDK_HOME = "C:\Program Files\Huawei\DevEco Studio\sdk"
 $env:DEVECO_HOME = "$env:DEVECO_SDK_HOME\.."
-$env:PATH = "$env:DEVECO_HOME\tools\node;$env:DEVECO_HOME\tools\ohpm\bin;$env:DEVECO_HOME\tools\hvigor\bin;$env:PATH"
+$env:PATH = "$env:DEVECO_SDK_HOME\default\openharmony\toolchains;$env:DEVECO_HOME\tools\node;$env:DEVECO_HOME\tools\ohpm\bin;$env:DEVECO_HOME\tools\hvigor\bin;$env:PATH"
 
 # 再次验证
 where hdc; where hvigorw; where ohpm
@@ -56,7 +56,7 @@ where hdc; where hvigorw; where ohpm
 ```bash
 export DEVECO_SDK_HOME=${DEVECO_SDK_HOME:-$(dirname $(dirname $(dirname $(dirname $(dirname $(which hdc))))))}
 export DEVECO_HOME=$DEVECO_SDK_HOME/..
-export PATH=$DEVECO_HOME/tools/node:$DEVECO_HOME/tools/ohpm/bin:$DEVECO_HOME/tools/hvigor/bin:$PATH
+export PATH=$DEVECO_SDK_HOME/default/openharmony/toolchains:$DEVECO_HOME/tools/node:$DEVECO_HOME/tools/ohpm/bin:$DEVECO_HOME/tools/hvigor/bin:$PATH
 
 # 再次验证
 which hdc; which hvigorw; which ohpm
