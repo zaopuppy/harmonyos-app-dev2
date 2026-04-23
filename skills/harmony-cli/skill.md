@@ -245,11 +245,11 @@ cmd /c "hdc file recv /data/local/tmp\screen.png .\screen.png"
 | `uitest uiInput click <x> <y>` | 点击 | 模拟点击操作 |
 | `uitest uiInput swipe` | 滑动 | 模拟滑动操作 |
 | `uitest uiInput text <content>` | 文本输入 | 模拟文本输入 |
-| **hvigorw** | 构建工具 | |
-| `hvigorw tasks` | 查看所有任务 | 查看模块可用构建任务 |
-| `hvigorw --mode module -p product=default -p module={module_name}@default assembleHap --analyze=normal --parallel --incremental --no-daemon` | 构建 HAP | entry 模块构建 |
-| `hvigorw --mode module -p product=default -p module={module_name}@default assembleHar --analyze=normal --parallel --incremental --no-daemon` | 构建 HAR | har 模块构建 |
-| `hvigorw --stop-daemon-all` | 停止 daemon | 停止所有 hvigor daemon |
+| **hvigorw** | 构建工具 | **执行前需先 source 环境脚本** |
+| `. ./setup_env.sh; hvigorw tasks` | 查看所有任务 | 查看模块可用构建任务 |
+| `. ./setup_env.sh; hvigorw --mode module -p product=default -p module={module_name}@default assembleHap --analyze=normal --parallel --incremental --no-daemon` | 构建 HAP | entry 模块构建 |
+| `. ./setup_env.sh; hvigorw --mode module -p product=default -p module={module_name}@default assembleHar --analyze=normal --parallel --incremental --no-daemon` | 构建 HAR | har 模块构建 |
+| `. ./setup_env.sh; hvigorw --stop-daemon-all` | 停止 daemon | 停止所有 hvigor daemon |
 
 ---
 
