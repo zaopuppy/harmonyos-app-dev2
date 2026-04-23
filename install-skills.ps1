@@ -1,5 +1,5 @@
 # Install HarmonyOS Skills
-# Copies skills to $HOME/.agents/skills and creates symlink at $APPDATA/chrys/skills
+# Copies skills to $HOME/.agents/skills and creates symlinks at $env:APPDATA/chrys/skills
 
 $ErrorActionPreference = 'Stop'
 
@@ -20,25 +20,24 @@ Copy-Item -Path "$skillsDir/*" -Destination $targetDir -Recurse -Force
 Write-Host "Done."
 
 # Create link directory if not exists
-$linkParent = Split-Path $linkDir -Parent
-if (-not (Test-Path $linkParent)) {
-    New-Item -ItemType Directory -Path $linkParent -Force | Out-Null
-    Write-Host "Created $linkParent"
+if (-not (Test-Path $linkDir)) {
+    New-Item -ItemType Directory -Path $linkDir -Force | Out-Null
+    Write-Host "Created $linkDir"
 }
 
-# Remove existing link if exists
-if (Test-Path $linkDir) {
-    $item = Get-Item $linkDir
-    if ($item.LinkType -eq 'SymbolicLink') {
-        Remove-Item $linkDir -Force
-        Write-Host "Removed existing symlink at $linkDir"
-    } else {
-        Remove-Item $linkDir -Recurse -Force
-        Write-Host "Removed existing directory at $linkDir"
+# Create symlink for each skill
+$skills = Get-ChildItem -Path $targetDir -Directory
+foreach ($skill in $skills) {
+    $linkPath = Join-Path $linkDir $skill.Name
+
+    # Remove existing item (symlink or directory) if exists
+    if (Test-Path $linkPath) {
+        Remove-Item $linkPath -Force
+        Write-Host "Removed existing: $linkPath"
     }
+
+    New-Item -ItemType SymbolicLink -Path $linkPath -Target $skill.FullName | Out-Null
+    Write-Host "Linked: $linkPath -> $($skill.FullName)"
 }
 
-# Create symlink
-New-Item -ItemType SymbolicLink -Path $linkDir -Target $targetDir | Out-Null
-Write-Host "Created symlink: $linkDir -> $targetDir"
 Write-Host "Installation complete."
