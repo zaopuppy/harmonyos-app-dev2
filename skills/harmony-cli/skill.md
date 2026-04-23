@@ -15,9 +15,7 @@ description: |
 
 ## 环境准备
 
-确保以下工具在 PATH 中可用：`hdc`、`hvigorw`。
-
-如果提示找不到命令，请先在终端中手动配置环境变量（详见项目 README.md）。
+确保 `DEVECO_SDK_HOME` 环境变量已设置，或者 `hdc` 在 PATH 中（用于推导 `DEVECO_SDK_HOME`）。`hvigorw` 和 `ohpm` 无需预装在 PATH 中，`source setup_env.sh` 会自动设置。
 
 ```bash
 where hdc        # Windows CMD
