@@ -1127,31 +1127,116 @@ obj[<span class="code-string">'key'</span>] = 1;
             </div>
             <h2 class="reveal">ArkUI <span class="accent">组件语法</span></h2>
             <p class="reveal" style="font-size: var(--body-size); color: var(--text-secondary); margin-bottom: var(--content-gap);">
-                ArkUI 组件语法是一套 <span class="text-cyan">DSL</span>，和 ArkTS 完全是两套语法。大部分时候可以正常生成。
+                ArkUI 组件语法是一套 <span class="text-cyan">声明式 DSL</span>，和 ArkTS 完全是两套体系。
             </p>
 
-            <div class="code-block reveal">
+            <!-- 组件分类概览 -->
+            <div class="grid-3 reveal" style="margin-bottom: var(--content-gap);">
+                <div class="card" style="border-left: 3px solid var(--accent-cyan);">
+                    <span class="badge badge-cyan">基础组件</span>
+                    <p style="margin-top: 6px; font-size: var(--small-size);">Text · Image · Button · TextInput</p>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-orange);">
+                    <span class="badge badge-orange">布局容器</span>
+                    <p style="margin-top: 6px; font-size: var(--small-size);">Column · Row · Stack · Flex</p>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--accent-magenta);">
+                    <span class="badge badge-magenta">列表/滚动</span>
+                    <p style="margin-top: 6px; font-size: var(--small-size);">List · Grid · Scroll · Swiper · Tabs</p>
+                </div>
+            </div>
+
+            <!-- 代码示例区域 -->
+            <div class="grid-2 reveal" style="gap: var(--content-gap); align-items: start;">
+                <div>
+                    <h4 style="color: var(--accent-cyan); margin-bottom: var(--element-gap); font-size: var(--small-size);">基础组件 + 布局</h4>
+                    <div class="code-block" style="font-size: clamp(0.6rem, 1vw, 0.75rem); line-height: 1.5;">
+<span class="code-comment">// Column 垂直布局</span>
+<span class="code-type">Column</span>() {
+    <span class="code-type">Text</span>(<span class="code-string">'Hello'</span>).fontSize(<span class="code-type">24</span>).fontWeight(<span class="code-type">FontWeight</span>.Bold)
+    <span class="code-type">Image</span>($r(<span class="code-string">'app.media.icon'</span>)).width(<span class="code-type">100</span>).height(<span class="code-type">100</span>)
+    <span class="code-type">Button</span>(<span class="code-string">'Click'</span>).type(<span class="code-type">ButtonType</span>.Capsule).width(<span class="code-type">200</span>)
+}
+.width(<span class="code-string">'100%'</span>)
+.alignItems(<span class="code-type">HorizontalAlign</span>.Center)
+.justifyContent(<span class="code-type">FlexAlign</span>.SpaceBetween)
+
+<span class="code-comment">// Row 水平布局</span>
+<span class="code-type">Row</span>() {
+    <span class="code-type">Image</span>(this.avatar).width(<span class="code-type">48</span>).height(<span class="code-type">48</span>).borderRadius(<span class="code-type">24</span>)
+    <span class="code-type">Text</span>(this.name).margin({ left: <span class="code-type">12</span> })
+    <span class="code-type">Blank</span>()
+    <span class="code-type">Image</span>($r(<span class="code-string">'app.media.arrow'</span>))
+}
+.width(<span class="code-string">'100%'</span>).padding(<span class="code-type">16</span>)
+                    </div>
+                </div>
+                <div>
+                    <h4 style="color: var(--accent-orange); margin-bottom: var(--element-gap); font-size: var(--small-size);">自定义组件 + 状态</h4>
+                    <div class="code-block" style="font-size: clamp(0.6rem, 1vw, 0.75rem); line-height: 1.5;">
 <span class="code-keyword">@Component</span>
-<span class="code-keyword">struct</span> <span class="code-type">AnimatedButton</span> {
-    <span class="code-member">@State</span> scale: <span class="code-type">number</span> = 1;
-    <span class="code-member">@State</span> opacity: <span class="code-type">number</span> = 1;
+<span class="code-keyword">struct</span> <span class="code-type">UserCard</span> {
+    <span class="code-member">@Prop</span> username: <span class="code-type">string</span> = <span class="code-string">''</span>;   <span class="code-comment">// 父组件传入</span>
+    <span class="code-member">@State</span> isFollowing: <span class="code-type">boolean</span> = <span class="code-keyword">false</span>;  <span class="code-comment">// 本地状态</span>
 
     <span class="code-keyword">build</span>() {
-        <span class="code-type">Button</span>(<span class="code-string">'Animated'</span>)
-            .scale({ x: <span class="code-keyword">this</span>.scale, y: <span class="code-keyword">this</span>.scale })
-            .opacity(<span class="code-keyword">this</span>.opacity)
-            .animation({ duration: 300, curve: <span class="code-type">Curve</span>.EaseInOut })
-            .onTouch((event: <span class="code-type">TouchEvent</span>) => {
-                <span class="code-keyword">if</span> (event.type === <span class="code-type">TouchType</span>.Down) {
-                    <span class="code-keyword">this</span>.scale = 0.95;
-                    <span class="code-keyword">this</span>.opacity = 0.8;
-                } <span class="code-keyword">else if</span> (event.type === <span class="code-type">TouchType</span>.Up) {
-                    <span class="code-keyword">this</span>.scale = 1;
-                    <span class="code-keyword">this</span>.opacity = 1;
-                }
-            })
+        <span class="code-type">Row</span>() {
+            <span class="code-type">Text</span>(<span class="code-keyword">this</span>.username).fontSize(<span class="code-type">16</span>).fontWeight(<span class="code-type">FontWeight</span>.Medium)
+            <span class="code-type">Blank</span>()
+            <span class="code-type">Button</span>(<span class="code-keyword">this</span>.isFollowing ? <span class="code-string">'Following'</span> : <span class="code-string">'Follow'</span>)
+                .onClick(() => { <span class="code-keyword">this</span>.isFollowing = !<span class="code-keyword">this</span>.isFollowing; })
+        }
+        .width(<span class="code-string">'100%'</span>).padding(<span class="code-type">16</span>)
     }
 }
+                    </div>
+                </div>
+            </div>
+
+            <!-- 更多示例 -->
+            <div class="grid-3 reveal" style="margin-top: var(--content-gap); gap: var(--content-gap);">
+                <div>
+                    <h4 style="color: var(--accent-magenta); margin-bottom: 6px; font-size: var(--small-size);">List + ForEach</h4>
+                    <div class="code-block" style="font-size: clamp(0.55rem, 0.9vw, 0.7rem); line-height: 1.4; padding: 0.6rem;">
+<span class="code-type">List</span>() {
+    <span class="code-type">ForEach</span>(<span class="code-keyword">this</span>.items, (item: <span class="code-type">Item</span>) => {
+        <span class="code-type">ListItem</span>() { <span class="code-type">Text</span>(item.name) }
+    }, (item) => item.id)
+}
+.width(<span class="code-string">'100%'</span>)
+.divider({ strokeWidth: <span class="code-type">1</span>, color: <span class="code-string">'#E8E8E8'</span> })
+                    </div>
+                </div>
+                <div>
+                    <h4 style="color: var(--accent-green); margin-bottom: 6px; font-size: var(--small-size);">@Styles 复用</h4>
+                    <div class="code-block" style="font-size: clamp(0.55rem, 0.9vw, 0.7rem); line-height: 1.4; padding: 0.6rem;">
+<span class="code-keyword">@Styles</span>
+<span class="code-keyword">function</span> cardStyle() {
+    .backgroundColor(<span class="code-type">Color</span>.White)
+    .borderRadius(<span class="code-type">12</span>)
+    .shadow({ radius: <span class="code-type">8</span>, color: <span class="code-string">'#1A000000'</span> })
+    .padding(<span class="code-type">16</span>)
+}
+
+<span class="code-comment">// 使用</span>
+<span class="code-type">Column</span>() { <span class="code-type">Text</span>(<span class="code-string">'Card'</span>) }
+.cardStyle()
+                    </div>
+                </div>
+                <div>
+                    <h4 style="color: var(--accent-red); margin-bottom: 6px; font-size: var(--small-size);">手势处理</h4>
+                    <div class="code-block" style="font-size: clamp(0.55rem, 0.9vw, 0.7rem); line-height: 1.4; padding: 0.6rem;">
+<span class="code-type">Image</span>(<span class="code-string">'photo'</span>)
+    .translate({ x: <span class="code-keyword">this</span>.offsetX, y: <span class="code-keyword">this</span>.offsetY })
+    .gesture(
+        <span class="code-type">PanGesture</span>()
+            .onActionUpdate((ev) => {
+                <span class="code-keyword">this</span>.offsetX = ev.offsetX;
+                <span class="code-keyword">this</span>.offsetY = ev.offsetY;
+            })
+    )
+                    </div>
+                </div>
             </div>
 
             <div class="strategy-tag strategy-do reveal" style="margin-top: var(--content-gap);">
