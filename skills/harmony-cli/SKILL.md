@@ -150,22 +150,6 @@ hdc shell "cat /data/local/tmp/log.txt | grep error"  # 设备端支持管道
 
 `hdc file send/recv` 在 Windows 下需要根据当前 shell 选择正确执行方式：
 
-#### Git Bash 环境
-
-Git Bash 会错误转换 hdc 的设备路径（如 `/data/...` 被转换成 `C:/Program Files/Git/...`）。
-
-```bash
-# 错误 - Git Bash 会转换路径
-hdc file recv /data/local/tmp/screen.png ./screen.png
-# 错误: path:C:/Program Files/Git/data/local/tmp/screen.png
-
-# 正确 - 使用 cmd //c 执行（推荐）
-cmd //c "hdc file recv /data/local/tmp/screen.png C:\temp\screen.png"
-
-# 也可以使用 PowerShell（但需要处理执行策略）
-powershell -ExecutionPolicy Bypass -Command "hdc file recv /data/local/tmp/screen.png C:\temp\screen.png"
-```
-
 #### PowerShell 环境
 
 PowerShell 环境下也可能遇到执行策略问题：
@@ -259,8 +243,8 @@ cmd /c "hdc file recv /data/local/tmp\screen.png .\screen.png"
 # 截图（设备端）
 hdc shell "uitest screenCap -p /data/local/tmp/screen.png"
 
-# 拉取到本地（Windows 下使用 cmd //c）
-cmd //c "hdc file recv /data/local/tmp/screen.png C:\temp\screen.png"
+# 拉取到本地
+hdc file recv /data/local/tmp/screen.png C:\temp\screen.png
 ```
 
 ### 应用启动
