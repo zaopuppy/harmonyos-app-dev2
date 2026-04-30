@@ -427,7 +427,31 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
                             line_number=class_info.line_number
                         ))
 
-        if not module_matches and not member_results:
+        # Also search class names across all modules
+        class_results = []
+        for mod_name, mod_info in indexer.modules.items():
+            parts = mod_name.split('.')
+            # Skip synthetic nested class modules
+            if len(parts) > 4 and parts[-1] == parts[-2]:
+                continue
+            for class_name, class_info in mod_info.classes.items():
+                if query_str == class_name or query_str in class_name:
+                    # Avoid duplicate: if module name itself matches, skip class result
+                    if mod_name.rsplit('.', 1)[-1] == query_str:
+                        continue
+                    # Build path: module.class or module#class for nested cases
+                    if class_name == mod_name.rsplit('.', 1)[-1]:
+                        path = f"{mod_name}#{class_name}"
+                    else:
+                        path = f"{mod_name}.{class_name}"
+                    class_results.append(CheckResult(
+                        path,
+                        Status.OK,
+                        file_path=mod_info.file,
+                        line_number=class_info.line_number
+                    ))
+
+        if not module_matches and not member_results and not class_results:
             return [CheckResult(query_str, Status.MODULE_NOT_FOUND, "no matching modules or members found")]
 
         # Deduplicate while preserving order (same path can appear in both lists)
@@ -439,6 +463,10 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
                 mod_info = indexer.get(m)
                 unique_results.append(CheckResult(m, Status.OK, file_path=mod_info.file if mod_info else ""))
         for result in member_results[:10]:
+            if result.item not in seen:
+                seen.add(result.item)
+                unique_results.append(result)
+        for result in class_results[:10]:
             if result.item not in seen:
                 seen.add(result.item)
                 unique_results.append(result)

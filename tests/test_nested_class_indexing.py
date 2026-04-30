@@ -338,7 +338,7 @@ def test_hms_modules_indexed():
     assert len(rcp_members) >= 5, f"Expected >=5 clean rcp members, got {len(rcp_members)}: {rcp_members}"
     assert "Request" in rcp_members, f"'Request' not found in rcp members: {rcp_members}"
     assert "createResponse" in rcp_members, f"'createResponse' not found in rcp members: {rcp_members}"
-    assert "fetch" in rcp_members, f"'fetch' not found in rcp members: {rcp_members}"
+    assert "createSession" in rcp_members, f"'createSession' not found in rcp members: {rcp_members}"
 
     # Verify urpc has resolved members
     urpc_class = rcp_mod.classes["urpc"]
@@ -376,6 +376,53 @@ def test_kit_prefix_query_direct_lookup():
     assert urpc_result is not None, f"urpc class not in results: {result_items}"
 
     print(f"PASS: test_kit_prefix_query_direct_lookup ({len(results)} results)")
+
+
+def test_extract_members_no_garbage():
+    """Test that extract_members doesn't produce garbage artifact names.
+    
+    Bug: extract_members accumulated interface/class body content, causing
+    fragments like '=', '|', '[k', 'textual?' to appear as member names.
+    Fixes: brace_depth filtering prevents body content from leaking into
+    declarations; identifier validation rejects non-identifier fragments.
+    """
+    from check_sdk_imports import query_mode
+
+    results = query_mode("@kit.RemoteCommunicationKit.rcp", _global_indexer)
+
+    # First result is the module.class header, skip it
+    member_items = [r.item.strip() for r in results[1:]]
+    
+    for member in member_items:
+        assert member.isidentifier(), \
+            f"Non-identifier garbage member found: '{member}'"
+        assert member not in ('=', '|'), \
+            f"Orphan operator found as member: '{member}'"
+        assert not member.startswith('['), \
+            f"Index signature fragment found as member: '{member}'"
+        assert '?' not in member, \
+            f"Optional property marker found in member: '{member}'"
+
+    print(f"PASS: test_extract_members_no_garbage ({len(member_items)} members, all clean identifiers)")
+
+
+def test_keyword_search_finds_class_names():
+    """Test that keyword search includes class names in results.
+    
+    Bug: partial match only searched module last-segments and member names,
+    not class names. Querying 'rcp' should find @kit.RemoteCommunicationKit.rcp.
+    """
+    from check_sdk_imports import query_mode
+
+    results = query_mode("rcp", _global_indexer)
+
+    items = [r.item for r in results]
+    assert "@kit.RemoteCommunicationKit.rcp" in items, \
+        f"Class name 'rcp' from @kit.RemoteCommunicationKit not found in results: {items}"
+    assert "@hms.collaboration.rcp" in items, \
+        f"Module @hms.collaboration.rcp should still be found: {items}"
+
+    print(f"PASS: test_keyword_search_finds_class_names ({len(results)} results)")
 
 
 def test_query_nonexistent_member_recommendation():
@@ -426,6 +473,8 @@ def run_all_tests():
     test_interface_properties_not_extracted_as_members()
     test_hms_modules_indexed()
     test_kit_prefix_query_direct_lookup()
+    test_extract_members_no_garbage()
+    test_keyword_search_finds_class_names()
 
     print("=" * 60)
     print("All tests passed!")

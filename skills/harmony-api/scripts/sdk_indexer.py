@@ -141,6 +141,9 @@ class SDKIndexer:
                 pos += 1
             return None, None
 
+        # Regex for valid JS/TS identifier: starts with letter/_/$, followed by alphanumeric/_/$
+        _IDENTIFIER_RE = re.compile(r'^[a-zA-Z_$][a-zA-Z0-9_$]*$')
+
         def extract_members(body: str) -> list:
             """Extract member names from a class or namespace body."""
             members = []
@@ -148,19 +151,18 @@ class SDKIndexer:
             brace_depth = 0
             current = []
             for char in body:
+                # Track depths for ALL characters, but only append
+                # characters at brace_depth == 0 to avoid polluting
+                # declarations with interface/class body internals.
                 if char == '(':
                     paren_depth += 1
-                    current.append(char)
                 elif char == ')':
                     paren_depth -= 1
-                    current.append(char)
                 elif char == '{':
                     brace_depth += 1
-                    current.append(char)
                 elif char == '}':
                     brace_depth -= 1
-                    current.append(char)
-                elif char == ';' and paren_depth == 0 and brace_depth == 0:
+                if char == ';' and paren_depth == 0 and brace_depth == 0:
                     decl = ''.join(current).strip()
                     current = []
                     if not decl:
@@ -177,25 +179,29 @@ class SDKIndexer:
                         words = before_paren.split()
                         if words:
                             name = words[-1]
-                            if name and name not in (
-                                'if', 'else', 'for', 'while', 'do',
-                                'switch', 'try', 'catch', 'finally',
-                                'get', 'set'):
+                            if _is_valid_member_name(name):
                                 if name not in members:
                                     members.append(name)
                     else:
                         colon_idx = decl.find(':')
                         if colon_idx != -1:
                             name = decl[:colon_idx].strip().split()[-1]
-                            if name and name not in (
-                                'if', 'else', 'for', 'while', 'do',
-                                'switch', 'try', 'catch', 'finally',
-                                'type'):
+                            if _is_valid_member_name(name):
                                 if name not in members:
                                     members.append(name)
-                else:
+                elif brace_depth == 0:
                     current.append(char)
             return members
+
+        def _is_valid_member_name(name: str) -> bool:
+            """Check if name is a valid JS/TS identifier and not a keyword fragment."""
+            if not name or not _IDENTIFIER_RE.match(name):
+                return False
+            if name in ('if', 'else', 'for', 'while', 'do',
+                        'switch', 'try', 'catch', 'finally',
+                        'get', 'set', 'type'):
+                return False
+            return True
 
         def pos_to_line(content: str, pos: int) -> int:
             """Convert byte/char position to line number (1-based)."""
