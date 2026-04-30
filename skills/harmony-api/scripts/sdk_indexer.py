@@ -16,8 +16,8 @@ SDK_SUBDIRS = [
     "default/openharmony/ets/arkts",
     "default/openharmony/ets/component",
     "default/openharmony/ets/kits",
-    "default/hms/etc/api",
-    "default/hms/etc/kits",
+    "default/hms/ets/api",
+    "default/hms/ets/kits",
 ]
 
 

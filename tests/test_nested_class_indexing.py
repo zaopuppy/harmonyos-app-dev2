@@ -312,6 +312,72 @@ def test_interface_properties_not_extracted_as_members():
     print(f"PASS: test_interface_properties_not_extracted_as_members ({len(member_names)} members checked)")
 
 
+def test_hms_modules_indexed():
+    """Test that HMS kits are correctly indexed (regression: etc→ets path typo).
+    
+    Bug: SDK_SUBDIRS used 'default/hms/etc/kits' instead of 'default/hms/ets/kits'
+    causing all 190 HMS .d.ts files to be skipped during indexing.
+    """
+    import json
+    import os
+
+    # Check that an HMS kit module exists in the index
+    assert "@kit.RemoteCommunicationKit" in _global_indexer.modules, \
+        "HMS kit @kit.RemoteCommunicationKit not found in index — check SDK_SUBDIRS paths"
+
+    rcp_mod = _global_indexer.get("@kit.RemoteCommunicationKit")
+    assert rcp_mod is not None
+    assert os.path.basename(rcp_mod.file) == "@kit.RemoteCommunicationKit.d.ts", \
+        f"Unexpected file: {rcp_mod.file}"
+    assert "rcp" in rcp_mod.classes, "rcp class not found in @kit.RemoteCommunicationKit"
+    assert "urpc" in rcp_mod.classes, "urpc class not found in @kit.RemoteCommunicationKit"
+
+    # Verify rcp has resolved members from barrel re-export
+    rcp_class = rcp_mod.classes["rcp"]
+    rcp_members = [m for m in rcp_class.members if m.isidentifier()]
+    assert len(rcp_members) >= 5, f"Expected >=5 clean rcp members, got {len(rcp_members)}: {rcp_members}"
+    assert "Request" in rcp_members, f"'Request' not found in rcp members: {rcp_members}"
+    assert "createResponse" in rcp_members, f"'createResponse' not found in rcp members: {rcp_members}"
+    assert "fetch" in rcp_members, f"'fetch' not found in rcp members: {rcp_members}"
+
+    # Verify urpc has resolved members
+    urpc_class = rcp_mod.classes["urpc"]
+    urpc_members = [m for m in urpc_class.members if m.isidentifier()]
+    assert len(urpc_members) >= 2, f"Expected >=2 clean urpc members, got {len(urpc_members)}: {urpc_members}"
+
+    print(f"PASS: test_hms_modules_indexed (rcp: {len(rcp_members)} clean members, urpc: {len(urpc_members)})")
+
+
+def test_kit_prefix_query_direct_lookup():
+    """Test that @kit.* queries use direct module lookup (regression: prefix handling).
+    
+    Bug: query_mode only handled @ohos. and @hms. prefixes for direct lookup.
+    @kit.* queries fell through to fuzzy partial matching which couldn't match them,
+    returning 'no matching modules or members found'.
+    """
+    from check_sdk_imports import query_mode
+
+    results = query_mode("@kit.RemoteCommunicationKit", _global_indexer)
+
+    assert len(results) >= 3, \
+        f"Expected >=3 results (module + 2 classes), got {len(results)}: {[r.item for r in results]}"
+
+    # First result should be the module itself
+    assert results[0].item == "@kit.RemoteCommunicationKit", \
+        f"Expected module result, got '{results[0].item}'"
+    assert results[0].status == Status.OK, \
+        f"Expected OK status, got {results[0].status}"
+
+    # Should include rcp and urpc with member counts
+    result_items = [r.item for r in results]
+    rcp_result = next((r for r in result_items if "rcp" in r), None)
+    urpc_result = next((r for r in result_items if "urpc" in r), None)
+    assert rcp_result is not None, f"rcp class not in results: {result_items}"
+    assert urpc_result is not None, f"urpc class not in results: {result_items}"
+
+    print(f"PASS: test_kit_prefix_query_direct_lookup ({len(results)} results)")
+
+
 def test_query_nonexistent_member_recommendation():
     """Test that querying non-existent member returns proper error path without duplication."""
     from check_sdk_imports import query_mode
@@ -358,6 +424,8 @@ def run_all_tests():
     test_partial_query_result_has_filepath()
     test_recommendation_no_fake_module_paths()
     test_interface_properties_not_extracted_as_members()
+    test_hms_modules_indexed()
+    test_kit_prefix_query_direct_lookup()
 
     print("=" * 60)
     print("All tests passed!")

@@ -312,7 +312,7 @@ def query_mode(query_str: str, indexer: SDKIndexer) -> List[CheckResult]:
 
         return [CheckResult(full, Status.OK, file_path=mod.file, line_number=cls.line_number)]
 
-    elif query_str.startswith('@ohos.') or query_str.startswith('@hms.'):
+    elif any(query_str.startswith(p + '.') for p in SDK_MODULE_PREFIXES):
         # Query module or module.class
         # First try direct module lookup
         show_members_directly = False  # Flag for synthetic nested class case
